@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPS Location Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .hidden { display: none; }
+        .error { color: red; font-size: 0.875rem; }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+    <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+        <div id="login-form" class="space-y-4">
+            <h2 class="text-2xl font-bold text-center">Login to GPS Tracker</h2>
+            <div class="error" id="login-error"></div>
+            <div>
+                <label for="host-ip" class="block text-sm font-medium text-gray-700">Host IP</label>
+                <input type="text" id="host-ip" placeholder="e.g., http://localhost:8000" class="mt-1 block w-full p-2 border border-gray-300 rounded-md">
+            </div>
+            <div>
+                <label for="username" class="block text-sm font-medium text-gray-700">Username</label>
+                <input type="text" id="username" placeholder="Enter username" class="mt-1 block w-full p-2 border border-gray-300 rounded-md">
+            </div>
+            <div>
+                <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+                <input type="password" id="password" placeholder="Enter password" class="mt-1 block w-full p-2 border border-gray-300 rounded-md">
+            </div>
+            <button onclick="handleLogin()" class="w-full bg-blue-600 text-white p-2 rounded-md hover:bg-blue-700">Login</button>
+        </div>
+        <div id="gps-form" class="space-y-4 hidden">
+            <h2 class="text-2xl font-bold text-center">Submit GPS Location</h2>
+            <div class="error" id="gps-error"></div>
+            <div>
+                <label for="latitude" class="block text-sm font-medium text-gray-700">Latitude</label>
+                <input type="number" step="any" id="latitude" placeholder="e.g., 37.7749" class="mt-1 block w-full p-2 border border-gray-300 rounded-md">
+            </div>
+            <div>
+                <label for="longitude" class="block text-sm font-medium text-gray-700">Longitude</label>
+                <input type="number" step="any" id="longitude" placeholder="e.g., -122.4194" class="mt-1 block w-full p-2 border border-gray-300 rounded-md">
+            </div>
+            <div>
+                <label for="altitude" class="block text-sm font-medium text-gray-700">Altitude (optional)</label>
+                <input type="number" step="any" id="altitude" placeholder="e.g., 100" class="mt-1 block w-full p-2 border border-gray-300 rounded-md">
+            </div>
+            <div>
+                <label for="accuracy" class="block text-sm font-medium text-gray-700">Accuracy (optional)</label>
+                <input type="number" step="any" id="accuracy" placeholder="e.g., 10" class="mt-1 block w-full p-2 border border-gray-300 rounded-md">
+            </div>
+            <button onclick="submitGPSLocation()" class="w-full bg-green-600 text-white p-2 rounded-md hover:bg-green-700">Submit GPS Location</button>
+            <button onclick="handleLogout()" class="w-full bg-red-600 text-white p-2 rounded-md hover:bg-red-700 mt-2">Logout</button>
+        </div>
+    </div>
+    <script>
+        let apiBaseUrl = '';
+        let accessToken = '';
+        async function handleLogin() {
+            const hostIp = document.getElementById('host-ip').value.trim();
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const loginError = document.getElementById('login-error');
+            if (!hostIp || !username || !password) {
+                loginError.textContent = 'Please fill in all fields.';
+                return;
+            }
+            apiBaseUrl = hostIp.endsWith('/') ? hostIp.slice(0, -1) : hostIp;
+            console.log('Sending request to:', `${apiBaseUrl}/api/token/`);
+            console.log('Payload:', { username, password });
+            try {
+                const response = await axios.post(`${apiBaseUrl}/api/token/`, {
+                    username,
+                    password
+                }, {
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                console.log('Response:', response.data);
+                accessToken = response.data.access;
+                localStorage.setItem('accessToken', accessToken);
+                localStorage.setItem('apiBaseUrl', apiBaseUrl);
+                document.getElementById('login-form').classList.add('hidden');
+                document.getElementById('gps-form').classList.remove('hidden');
+                loginError.textContent = '';
+            } catch (error) {
+                console.error('Login error:', error.response?.status, error.response?.data);
+                loginError.textContent = error.response?.data?.detail || 'Login failed. Please check your credentials.';
+            }
+        }
+        async function submitGPSLocation() {
+            const latitude = document.getElementById('latitude').value;
+            const longitude = document.getElementById('longitude').value;
+            const altitude = document.getElementById('altitude').value || null;
+            const accuracy = document.getElementById('accuracy').value || null;
+            const gpsError = document.getElementById('gps-error');
+            if (!latitude || !longitude) {
+                gpsError.textContent = 'Latitude and longitude are required.';
+                return;
+            }
+            const data = {
+                latitude: parseFloat(latitude),
+                longitude: parseFloat(longitude),
+                altitude: altitude ? parseFloat(altitude) : null,
+                accuracy: accuracy ? parseFloat(accuracy) : null
+            };
+            console.log('Submitting GPS data:', data);
+            try {
+                const response = await axios.post(`${apiBaseUrl}/api/gpslocations/`, data, {
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                console.log('GPS response:', response.data);
+                gpsError.textContent = 'GPS location submitted successfully!';
+                gpsError.style.color = 'green';
+                document.getElementById('latitude').value = '';
+                document.getElementById('longitude').value = '';
+                document.getElementById('altitude').value = '';
+                document.getElementById('accuracy').value = '';
+            } catch (error) {
+                console.error('GPS error:', error.response?.status, error.response?.data);
+                gpsError.textContent = error.response?.data?.detail || 'Failed to submit GPS location.';
+                gpsError.style.color = 'red';
+            }
+        }
+        function handleLogout() {
+            accessToken = '';
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('apiBaseUrl');
+            document.getElementById('gps-form').classList.add('hidden');
+            document.getElementById('login-form').classList.remove('hidden');
+            document.getElementById('login-error').textContent = 'Logged out successfully.';
+        }
+        window.onload = () => {
+            accessToken = localStorage.getItem('accessToken') || '';
+            apiBaseUrl = localStorage.getItem('apiBaseUrl') || '';
+            if (accessToken && apiBaseUrl) {
+                axios.get(`${apiBaseUrl}/api/gpslocations/`, {
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`
+                    }
+                }).then(() => {
+                    document.getElementById('login-form').classList.add('hidden');
+                    document.getElementById('gps-form').classList.remove('hidden');
+                }).catch(() => {
+                    localStorage.removeItem('accessToken');
+                    localStorage.removeItem('apiBaseUrl');
+                });
+            }
+        };
+    </script>
+</body>
+</html>

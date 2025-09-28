@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Your Registration Information</h2>
+    <div class="card">
+        <div class="card-body">
+            <p><strong>Username:</strong> {{ user.username }}</p>
+            <p><strong>Email:</strong> {{ user.email }}</p>
+            <p><strong>Registration Method:</strong> 
+                <span class="badge bg-{% if registration_method == 'email' %}primary{% else %}success{% endif %}">
+                    {{ registration_method|title }}
+                </span>
+            </p>
+            
+            {% if is_google_user %}
+                <div class="alert alert-info">
+                    <strong>Google User:</strong> You registered using Google OAuth authentication.
+                </div>
+            {% else %}
+                <div class="alert alert-primary">
+                    <strong>Email User:</strong> You registered using email authentication.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,9 @@
+In the Django, in accounts app, please build functions to allow user to register as user. 
+
+ There are two registration verification method : through e-mail or google account.
+
+ There are also forget password function using e-mail to inform user the reset password.
+
+ Also build restful api on them with JWT for React from end to 
+ provide registrations and forget password function. 
+

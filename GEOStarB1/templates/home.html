@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto text-center">
+        <h1>Welcome to My App</h1>
+        
+        {% if user.is_authenticated %}
+            <p>Hello, {{ user.get_full_name|default:user.username }}!</p>
+            <p><a href="{% url 'profile' %}" class="btn btn-primary">View Profile</a></p>
+        {% else %}
+            <p>Please login or signup to continue.</p>
+            <div class="mt-4">
+                <h3>Login with:</h3>
+                <a href="{% url 'socialaccount_login' %}?provider=google" class="btn btn-danger me-2">
+                    <i class="fab fa-google"></i> Google
+                </a>
+                <a href="{% url 'socialaccount_login' %}?provider=facebook" class="btn btn-primary">
+                    <i class="fab fa-facebook"></i> Facebook
+                </a>
+            </div>
+            <div class="mt-4">
+                <h3>Or login with email:</h3>
+                <a href="{% url 'account_login' %}" class="btn btn-secondary">Email Login</a>
+                <a href="{% url 'account_signup' %}" class="btn btn-success">Sign Up</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

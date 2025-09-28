@@ -1,0 +1,77 @@
+Technology stack
+
+git
+github
+
+Frontend - Development
+--------
+Vite + React Framework
+axios
+Use localStorage in React.
+javascript
+vscode
+
+
+
+Vite + React Framework
+axios
+Use localStorage in React.
+javascript
+vscode
+
+
+System Name = GEOStarA 
+Backend - Development Environment 
+---------------------------------
+Ubuntu 24.04
+Python 3.12.4
+html
+css
+Postgres 16
+zsh  
+ohmyzsh
+prowerlevel9
+VScode
+git & github
+Django 4.2, 
+Bootstrap 5.3.3, (linked in base.html)
+Font Awesome 6.5.2,
+Project Directory = home/jackieng/GEOStarA
+
+virtualenv
+Name of the virtualenv : genv
+asgiref  3.9.1
+Django   4.2
+pillow   11.3.0
+pip      25.1.1
+psycopg2 2.9.10
+sqlparse 0.5.3
+django-cors-headers
+django-allauth  Social Login: Google, Github
+Django REST Framework (DRF) for RESTful endpoints
+JWT
+
+Guidelines:
+For general js and css to the system, the link to common css and js files will be put in base.html
+For js and css special to a html, it will be stored as "internal" in the html 
+There are base.html,  _navbar.html 
+
+React implement Social Login Google: React contact Google directly 
+    by using useGoogleLogin to get access_token 
+    and send to backend django  /api/auth/google/.
+
+Production
+DigitalOcean Droplet
+Domain name : jackieng.hk
+nginx and gunicorn
+frontEnd and backend initially not use web sever nginx 
+Frontend Project Directory = home/jackieng/GPSInfo-FrontEnd
+Backend Project Directory = home/jackieng/GPSInfo-BackEnd
+
+System Function
+Data Model: A GPSLocation model with fields like latitude, longitude, and timestamp, serialized to JSON.
+
+The frontend is on mobile phone. 
+The GPSLocation will be stored every 15sec in localStorage by standard map component and 
+the data will be send to backend through django restful api gateway every 15 sec for recording
+Another function will call the backend to send out the latest position of all users.

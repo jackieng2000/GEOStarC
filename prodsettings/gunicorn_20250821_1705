@@ -1,0 +1,14 @@
+[Unit]
+Description=Gunicorn instance for GPSInfo-BackEnd
+After=network.target
+
+[Service]
+User=jackieng
+Group=www-data
+WorkingDirectory=/home/jackieng/GPSInfo-BackEnd
+Environment="VIRTUAL_ENV=/home/jackieng/.virtualenvs/penv"
+Environment="PATH=$VIRTUAL_ENV/bin:$PATH"
+ExecStart=/home/jackieng/.virtualenvs/penv/bin/python /home/jackieng/GPSInfo-BackEnd/manage.py runserver 0.0.0.0:8000
+
+[Install]
+WantedBy=multi-user.target

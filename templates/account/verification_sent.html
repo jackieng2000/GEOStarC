@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Verify Your Email Address" %}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card p-4 text-center">
+                <div class="mb-4">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-success">
+                        <path d="M22 6C22 4.9 21.1 4 20 4H4C2.9 4 2 4.9 2 6V18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V6ZM20 6L12 11L4 6H20ZM20 18H4V8L12 13L20 8V18Z" fill="currentColor"/>
+                    </svg>
+                </div>
+                
+                <h1 class="mb-3">{% trans "Verify Your Email Address" %}</h1>
+                
+                <p class="lead mb-4"> 
+                  
+                    {% blocktrans %}
+                    We've sent an email to you for verification. 
+                    Please click the link in that email to complete your registration.
+                    {% endblocktrans %}
+                </p>
+
+                <div class="alert alert-info">
+                    <p class="mb-0">
+
+                        {% if request.user.email %}
+
+                        
+    <!-- For logged-in users -->
+    <strong>{{ request.user.email }}</strong>
+{% elif email %}
+    <!-- If allauth provides email variable -->
+    <strong>{{ email }}</strong>
+{% else %}
+    <!-- Fallback -->
+    your registered email address
+{% endif %}
+
+                        <strong>{% trans "Note:" %}</strong>
+                        {% blocktrans %}
+                        If you don't see the verification email in your main inbox, 
+                        check your spam folder. The email will be sent from 
+                        <strong>noreply@yourdomain.com</strong>.
+                        {% endblocktrans %}
+                    </p>
+                </div>
+
+                <div class="mt-4">
+                    <p class="text-muted mb-3">
+                        {% trans "Didn't receive the email?" %}
+                    </p>
+                    <form method="post" action="{% url 'account_email' %}">
+                        {% csrf_token %}
+                        <button type="submit" name="action_send" class="btn btn-outline-primary">
+                            {% trans 'Resend Verification Email' %}
+                        </button>
+                    </form>
+                </div>
+
+                <div class="mt-4">
+                    <a href="{% url 'account_login' %}" class="btn btn-secondary">
+                        {% trans 'Return to Login' %}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

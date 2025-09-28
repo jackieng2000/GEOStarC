@@ -1,0 +1,8 @@
+Instruction.
+
+Only the index.html in your browser
+
+Input the below
+IP address : http://209.97.164.73:8000
+username: gordon
+password: 1234

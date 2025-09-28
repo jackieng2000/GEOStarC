@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPS Info Input (HTML Using Django RESTful framework and JWT)</title>
+    <!-- Using local Tailwind CSS to avoid production warning -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.43/moment-timezone-with-data.min.js"></script>
+    <style>
+        body {
+            background: linear-gradient(to bottom, #e0f2fe, #bae6fd);
+            min-height: 100vh;
+            font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+        }
+        .error {
+            color: #dc2626;
+            font-size: 0.875rem;
+        }
+        .success {
+            color: #059669;
+            font-size: 0.875rem;
+        }
+        .debug-info {
+            background-color: #f3f4f6;
+            padding: 12px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 0.875rem;
+            margin-top: 10px;
+            display: none;
+        }
+        .form-input {
+            transition: all 0.3s ease;
+            border-width: 1px;
+        }
+        .form-input:focus {
+            border-color: #3b82f6;
+            ring: 2px solid #3b82f6;
+            box-shadow: 0 0 5px rgba(59, 130, 246, 0.5);
+        }
+        .table-row:hover {
+            background-color: #f3f4f6;
+        }
+        .location-status {
+            padding: 8px 12px;
+            border-radius: 6px;
+            margin-bottom: 12px;
+            font-size: 0.875rem;
+        }
+        .location-status.acquiring {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+        .location-status.acquired {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+        .location-status.error {
+            background-color: #fee2e2;
+            color: #b91c1c;
+        }
+        @media (max-width: 640px) {
+            .container {
+                padding: 1rem;
+            }
+            table {
+                font-size: 0.75rem;
+            }
+            th, td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body class="font-sans text-gray-800">
+    <div class="container mx-auto p-4 max-w-7xl">
+        <!-- Debug Info Panel -->
+        <div id="debug-panel" class="bg-yellow-100 border-l-4 border-yellow-500 p-4 mb-6" style="display: none;">
+            <div class="flex">
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-yellow-800">Debug Information</h3>
+                    <div class="mt-2 text-sm text-yellow-700">
+                        <p id="debug-url"></p>
+                        <p id="debug-status"></p>
+                        <p id="debug-response"></p>
+                    </div>
+                </div>
+                <div class="ml-auto pl-3">
+                    <button id="hide-debug" class="text-yellow-700 hover:text-yellow-600">
+                        <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Login Section -->
+        <section id="login-section" class="mb-8">
+            <h1 class="text-3xl font-bold text-center text-blue-600 mb-6">GPS Info Input Using Django RESTful API & JWT</h1>
+            <form id="login-form" class="bg-white shadow-lg rounded-lg p-6 max-w-md mx-auto">
+                <div class="mb-4">
+                    <label for="host-ip" class="block text-sm font-medium text-gray-700">Host IP</label>
+                    <input type="text" id="host-ip" name="host-ip" value="localhost:8000" required
+                           class="form-input mt-1 block w-full rounded-md border-gray-300 p-2 focus:border-blue-500">
+                </div>
+                <div class="mb-4">
+                    <label for="username" class="block text-sm font-medium text-gray-700">Username</label>
+                    <input type="text" id="username" name="username" value="admin" required
+                           class="form-input mt-1 block w-full rounded-md border-gray-300 p-2 focus:border-blue-500">
+                </div>
+                <div class="mb-4">
+                    <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+                    <input type="password" id="password" name="password" required
+                           class="form-input mt-1 block w-full rounded-md border-gray-300 p-2 focus:border-blue-500">
+                </div>
+                <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition duration-300">
+                    Login
+                </button>
+                <p id="login-error" class="error mt-2 text-center"></p>
+            </form>
+        </section>
+
+        <!-- Main Content: GPS Input and Records -->
+        <div id="main-content" class="flex flex-col gap-8" style="display: none;">
+            <!-- Host IP Display -->
+            <div class="bg-white shadow-lg rounded-lg p-4 max-w-md mx-auto">
+                <p class="text-sm font-medium text-gray-700">Connected to Host: <span id="host-ip-display" class="font-semibold"></span></p>
+            </div>
+
+            <!-- GPS Submission Section -->
+            <section id="gps-section">
+                <h2 class="text-2xl font-semibold text-blue-600 mb-4">Capture GPS Location End Pt 1</h2>
+                
+                <!-- Location Status -->
+                <div id="location-status" class="location-status acquiring" style="display: none;">
+                    Acquiring your location...
+                </div>
+                
+                <!-- Current Location Display -->
+                <div id="current-location" class="bg-white shadow-lg rounded-lg p-6 mb-4" style="display: none;">
+                    <h3 class="text-lg font-semibold text-blue-600 mb-3">Current Location</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-sm font-medium text-gray-700">Latitude:</p>
+                            <p id="current-latitude" class="text-lg font-mono">--</p>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-700">Longitude:</p>
+                            <p id="current-longitude" class="text-lg font-mono">--</p>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-700">Altitude:</p>
+                            <p id="current-altitude" class="text-lg font-mono">--</p>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-700">Accuracy:</p>
+                            <p id="current-accuracy" class="text-lg font-mono">--</p>
+                        </div>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-3">Last updated: <span id="location-timestamp">--</span></p>
+                </div>
+                
+                <div class="bg-white shadow-lg rounded-lg p-6">
+                    <div class="flex gap-2">
+                        <button type="button" id="start-capture-btn" class="w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700 transition duration-300">
+                            Start Capturing GPS
+                        </button>
+                        <button type="button" id="stop-capture-btn" class="w-full bg-gray-600 text-white py-2 rounded-md hover:bg-gray-700 transition duration-300" style="display: none;">
+                            Stop Capturing GPS
+                        </button>
+                    </div>
+                    <p id="gps-error" class="error mt-2 text-center"></p>
+                    <p id="gps-success" class="success mt-2 text-center"></p>
+                    <div id="auto-capture-status" class="text-xs text-gray-600 text-center mt-2" style="display: none;">
+                        Auto-capturing every 5 seconds
+                    </div>
+                </div>
+
+                <!-- Recent Submissions Section -->
+                <div class="mt-6">
+                    <h3 class="text-xl font-semibold text-blue-600 mb-4">Recent GPS Submissions (Last 5)</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full bg-white shadow-lg rounded-lg">
+                            <thead class="bg-gray-100">
+                                <tr>
+                                    <th class="py-3 px-4 text-left text-sm font-medium text-gray-700">Timestamp</th>
+                                    <th class="py-3 px-4 text-left text-sm font-medium text-gray-700">Latitude</th>
+                                    <th class="py-3 px-4 text-left text-sm font-medium text-gray-700">Longitude</th>
+                                    <th class="py-3 px-4 text-left text-sm font-medium text-gray-700">Altitude</th>
+                                    <th class="py-3 px-4 text-left text-sm font-medium text-gray-700">Accuracy</th>
+                                    <th class="py-3 px-4 text-left text-sm font-medium text-gray-700">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recent-submissions" class="text-gray-600">
+                                <tr>
+                                    <td colspan="6" class="py-4 px-4 text-center">No recent submissions</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Records Section -->
+            <section id="records-section">
+                <h2 class="text-2xl font-semibold text-blue-600 mb-4">Request GPS Records End Pt 2</h2>
+                <form id="records-form" class="bg-white shadow-lg rounded-lg p-6 mb-6">
+                    <div class="mb-4">
+                        <label for="user-group" class="block text-sm font-medium text-gray-700">User Group</label>
+                        <input type="text" id="user-group" name="user-group" placeholder="Enter group name"
+                               class="form-input mt-1 block w-full rounded-md border-gray-300 p-2 focus:border-blue-500">
+                    </div>
+                    <div class="flex gap-2">
+                        <button type="submit" id="fetch-records-btn" class="w-full bg-purple-600 text-white py-2 rounded-md hover:bg-purple-700 transition duration-300">
+                            Fetch Records
+                        </button>
+                        <button type="button" id="stop-fetching-btn" class="w-full bg-gray-600 text-white py-2 rounded-md hover:bg-gray-700 transition duration-300" style="display: none;">
+                            Stop Fetching
+                        </button>
+                    </div>
+                    <p id="records-error" class="error mt-2 text-center"></p>
+                    <div class="flex justify-between items-center mt-2">
+                        <button type="button" id="show-debug" class="text-xs text-blue-600 hover:text-blue-800">
+                            Show Debug Info
+                        </button>
+                        <div id="auto-fetch-status" class="text-xs text-gray-600" style="display: none;">
+                            Auto-fetching every 1 second
+                        </div>
+                    </div>
+                </form>
+
+                <h3 class="text-xl font-semibold text-blue-600 mb-4">GPS Records</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full bg-white shadow-lg rounded-lg">
+                        <thead class="bg-gray-100">
+                            <tr>
+                                <th class="py-3 px-4 text-left text-sm font-medium text-gray-700">Timestamp</th>
+                                <th class="py-3 px-4 text-left text-sm font-medium text-gray-700">User</th>
+                                <th class="py-3 px-4 text-left text-sm font-medium text-gray-700">Latitude</th>
+                                <th class="py-3 px-4 text-left text-sm font-medium text-gray-700">Longitude</th>
+                                <th class="py-3 px-4 text-left text-sm font-medium text-gray-700">Altitude</th>
+                                <th class="py-3 px-4 text-left text-sm font-medium text-gray-700">Accuracy</th>
+                            </tr>
+                        </thead>
+                        <tbody id="gps-records" class="text-gray-600">
+                            <!-- Records will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+
+        <!-- Logout Button -->
+        <button id="logout" class="w-full max-w-xs mx-auto bg-red-600 text-white py-2 rounded-md hover:bg-red-700 transition duration-300" style="display: none;">
+            Logout
+        </button>
+    </div>
+
+    <script>
+        // Store tokens and host
+        let accessToken = '';
+        let hostIp = '';
+        let refreshToken = '';
+        let fetchInterval = null;
+        let isAutoFetching = false;
+        let captureInterval = null;
+        let isAutoCapturing = false;
+        let watchId = null;
+        let recentSubmissions = [];
+        let currentPosition = null;
+
+        // Clean host input to remove http:// or https://
+        function cleanHostIp(input) {
+            // Remove protocol and trailing slashes
+            return input.replace(/^https?:\/\//, '').replace(/\/+$/, '');
+        }
+
+        // Format timestamp to YYYY-MM-DD HH:MM:SS in Asia/Hong_Kong
+        function formatTimestamp(isoString) {
+            return moment(isoString).tz('Asia/Hong_Kong').format('YYYY-MM-DD HH:mm:ss');
+        }
+
+        // Show debug information
+        function showDebugInfo(url, status, response) {
+            document.getElementById('debug-url').textContent = 'URL: ' + url;
+            document.getElementById('debug-status').textContent = 'Status: ' + status;
+            document.getElementById('debug-response').textContent = 'Response: ' + response;
+            document.getElementById('debug-panel').style.display = 'block';
+        }
+
+        // Function to refresh access token
+        async function refreshAccessToken() {
+            try {
+                const response = await fetch(`http://${hostIp}/api/token/refresh/`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ refresh: refreshToken })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    accessToken = data.access;
+                    return true;
+                } else {
+                    console.error('Token refresh failed');
+                    return false;
+                }
+            } catch (error) {
+                console.error('Error refreshing token:', error);
+                return false;
+            }
+        }
+
+        // Start auto-fetching records
+        function startAutoFetching() {
+            if (isAutoFetching) return;
+            
+            isAutoFetching = true;
+            document.getElementById('fetch-records-btn').style.display = 'none';
+            document.getElementById('stop-fetching-btn').style.display = 'block';
+            document.getElementById('auto-fetch-status').style.display = 'block';
+            
+            // Fetch immediately
+            fetchGPSRecords();
+            
+            // Then set up interval for every second
+            fetchInterval = setInterval(fetchGPSRecords, 1000);
+        }
+
+        // Stop auto-fetching records
+        function stopAutoFetching() {
+            isAutoFetching = false;
+            document.getElementById('fetch-records-btn').style.display = 'block';
+            document.getElementById('stop-fetching-btn').style.display = 'none';
+            document.getElementById('auto-fetch-status').style.display = 'none';
+            
+            if (fetchInterval) {
+                clearInterval(fetchInterval);
+                fetchInterval = null;
+            }
+        }
+
+        // Start capturing GPS location
+        function startCapturing() {
+            if (isAutoCapturing) return;
+            
+            // Check if geolocation is available
+            if (!navigator.geolocation) {
+                document.getElementById('gps-error').textContent = 'Geolocation is not supported by this browser.';
+                return;
+            }
+            
+            isAutoCapturing = true;
+            document.getElementById('start-capture-btn').style.display = 'none';
+            document.getElementById('stop-capture-btn').style.display = 'block';
+            document.getElementById('auto-capture-status').style.display = 'block';
+            document.getElementById('location-status').style.display = 'block';
+            document.getElementById('location-status').className = 'location-status acquiring';
+            document.getElementById('location-status').textContent = 'Acquiring your location...';
+            
+            // Start watching position
+            watchId = navigator.geolocation.watchPosition(
+                positionSuccess,
+                positionError,
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0
+                }
+            );
+        }
+
+        // Stop capturing GPS location
+        function stopCapturing() {
+            isAutoCapturing = false;
+            document.getElementById('start-capture-btn').style.display = 'block';
+            document.getElementById('stop-capture-btn').style.display = 'none';
+            document.getElementById('auto-capture-status').style.display = 'none';
+            document.getElementById('location-status').style.display = 'none';
+            
+            if (watchId !== null) {
+                navigator.geolocation.clearWatch(watchId);
+                watchId = null;
+            }
+            
+            if (captureInterval) {
+                clearInterval(captureInterval);
+                captureInterval = null;
+            }
+        }
+
+        // Success callback for geolocation
+        function positionSuccess(position) {
+            currentPosition = position;
+            const { latitude, longitude, altitude, accuracy } = position.coords;
+            const timestamp = new Date(position.timestamp).toISOString();
+            
+            // Update current location display
+            document.getElementById('current-latitude').textContent = latitude.toFixed(6);
+            document.getElementById('current-longitude').textContent = longitude.toFixed(6);
+            document.getElementById('current-altitude').textContent = altitude ? altitude.toFixed(2) + ' m' : 'N/A';
+            document.getElementById('current-accuracy').textContent = accuracy.toFixed(2) + ' m';
+            document.getElementById('location-timestamp').textContent = formatTimestamp(timestamp);
+            document.getElementById('current-location').style.display = 'block';
+            
+            // Update status
+            document.getElementById('location-status').className = 'location-status acquired';
+            document.getElementById('location-status').textContent = 'Location acquired successfully';
+            
+            // Submit the location
+            submitGPSLocation(latitude, longitude, altitude, accuracy, timestamp);
+        }
+
+        // Error callback for geolocation
+        function positionError(error) {
+            let errorMessage;
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    errorMessage = "User denied the request for Geolocation.";
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    errorMessage = "Location information is unavailable.";
+                    break;
+                case error.TIMEOUT:
+                    errorMessage = "The request to get user location timed out.";
+                    break;
+                case error.UNKNOWN_ERROR:
+                    errorMessage = "An unknown error occurred.";
+                    break;
+            }
+            
+            document.getElementById('location-status').className = 'location-status error';
+            document.getElementById('location-status').textContent = errorMessage;
+            document.getElementById('gps-error').textContent = errorMessage;
+        }
+
+        // Update recent submissions display
+        function updateRecentSubmissions() {
+            const tbody = document.getElementById('recent-submissions');
+            tbody.innerHTML = '';
+            
+            if (recentSubmissions.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="py-4 px-4 text-center">No recent submissions</td></tr>';
+                return;
+            }
+            
+            // Show only the latest 5 submissions
+            const displaySubmissions = recentSubmissions.slice(0, 5);
+            
+            displaySubmissions.forEach(submission => {
+                const row = document.createElement('tr');
+                row.className = 'table-row';
+                row.innerHTML = `
+                    <td class="py-2 px-4">${formatTimestamp(submission.timestamp)}</td>
+                    <td class="py-2 px-4">${submission.latitude.toFixed(6)}</td>
+                    <td class="py-2 px-4">${submission.longitude.toFixed(6)}</td>
+                    <td class="py-2 px-4">${submission.altitude ? submission.altitude.toFixed(2) + ' m' : 'N/A'}</td>
+                    <td class="py-2 px-4">${submission.accuracy ? submission.accuracy.toFixed(2) + ' m' : 'N/A'}</td>
+                    <td class="py-2 px-4 ${submission.status === 'Success' ? 'text-green-600' : 'text-red-600'}">${submission.status}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Submit GPS location function
+        async function submitGPSLocation(latitude, longitude, altitude, accuracy, timestamp) {
+            if (!accessToken) {
+                document.getElementById('gps-error').textContent = 'Please login first';
+                stopCapturing();
+                return;
+            }
+
+            try {
+                const response = await fetch(`http://${hostIp}/api/gpslocations/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${accessToken}`
+                    },
+                    body: JSON.stringify({ latitude, longitude, altitude, accuracy })
+                });
+                
+                if (response.ok) {
+                    document.getElementById('gps-error').textContent = '';
+                    document.getElementById('gps-success').textContent = 'GPS location submitted successfully';
+                    
+                    // Add to recent submissions
+                    recentSubmissions.unshift({
+                        timestamp,
+                        latitude,
+                        longitude,
+                        altitude,
+                        accuracy,
+                        status: 'Success'
+                    });
+                    
+                    // Keep only the latest 10 submissions in memory
+                    if (recentSubmissions.length > 10) {
+                        recentSubmissions.pop();
+                    }
+                    
+                    // Update the display
+                    updateRecentSubmissions();
+                    
+                    // Clear success message after 3 seconds
+                    setTimeout(() => {
+                        document.getElementById('gps-success').textContent = '';
+                    }, 10000);
+                } else if (response.status === 401) {
+                    // Token might be expired, try to refresh
+                    const refreshed = await refreshAccessToken();
+                    if (refreshed) {
+                        // Add to recent submissions as failed
+                        recentSubmissions.unshift({
+                            timestamp,
+                            latitude,
+                            longitude,
+                            altitude,
+                            accuracy,
+                            status: 'Failed (Token refreshed, try again)'
+                        });
+                        
+                        // Update the display
+                        updateRecentSubmissions();
+                        
+                        document.getElementById('gps-error').textContent = 'Token refreshed, please try again';
+                    } else {
+                        document.getElementById('gps-error').textContent = 'Session expired. Please login again.';
+                        stopCapturing();
+                    }
+                } else {
+                    const errorData = await response.json();
+                    
+                    // Add to recent submissions as failed
+                    recentSubmissions.unshift({
+                        timestamp,
+                        latitude,
+                        longitude,
+                        altitude,
+                        accuracy,
+                        status: 'Failed'
+                    });
+                    
+                    // Update the display
+                    updateRecentSubmissions();
+                    
+                    document.getElementById('gps-error').textContent = errorData.detail || 'Failed to submit GPS location';
+                }
+            } catch (error) {
+                console.error('GPS submission error:', error);
+                
+                // Add to recent submissions as failed
+                recentSubmissions.unshift({
+                    timestamp,
+                    latitude,
+                    longitude,
+                    altitude,
+                    accuracy,
+                    status: 'Failed (Network error)'
+                });
+                
+                // Update the display
+                updateRecentSubmissions();
+                
+                document.getElementById('gps-error').textContent = 'Network error. Please check your connection.';
+            }
+        }
+
+        // Fetch GPS records function
+        async function fetchGPSRecords() {
+            if (!accessToken) {
+                document.getElementById('records-error').textContent = 'Please login first';
+                stopAutoFetching();
+                return;
+            }
+
+            const userGroup = document.getElementById('user-group').value;
+            let url = `http://${hostIp}/api/gpslocations/latest/`;
+            
+            if (userGroup) {
+                url += `?group=${encodeURIComponent(userGroup)}`;
+            }
+
+            try {
+                console.log("Fetching records from:", url);
+                
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`
+                    }
+                });
+                
+                console.log("Response status:", response.status);
+                
+                if (response.ok) {
+                    const recordsData = await response.json();
+                    console.log("Records received:", recordsData);
+                    
+                    const tbody = document.getElementById('gps-records');
+                    tbody.innerHTML = '';
+                    
+                    // Handle both array and single object responses
+                    let records = [];
+                    if (Array.isArray(recordsData)) {
+                        records = recordsData;
+                    } else if (typeof recordsData === 'object' && recordsData !== null) {
+                        // If it's a single object, wrap it in an array
+                        records = [recordsData];
+                    }
+                    
+                    if (records.length === 0) {
+                        document.getElementById('records-error').textContent = 'No records found';
+                    } else {
+                        document.getElementById('records-error').textContent = '';
+                        records.forEach(record => {
+                            const row = document.createElement('tr');
+                            row.className = 'table-row';
+                            row.innerHTML = `
+                                <td class="py-2 px-4">${formatTimestamp(record.timestamp)}</td>
+                                <td class="py-2 px-4">${record.username || 'N/A'}</td>
+                                <td class="py-2 px-4">${record.latitude}</td>
+                                <td class="py-2 px-4">${record.longitude}</td>
+                                <td class="py-2 px-4">${record.altitude || 'N/A'}</td>
+                                <td class="py-2 px-4">${record.accuracy || 'N/A'}</td>
+                            `;
+                            tbody.appendChild(row);
+                        });
+                    }
+                } else if (response.status === 401) {
+                    // Token might be expired, try to refresh
+                    const refreshed = await refreshAccessToken();
+                    if (refreshed) {
+                        document.getElementById('records-error').textContent = 'Token refreshed, please try again';
+                    } else {
+                        document.getElementById('records-error').textContent = 'Session expired. Please login again.';
+                        stopAutoFetching();
+                    }
+                    showDebugInfo(url, response.status, 'Authentication error');
+                } else if (response.status === 404) {
+                    document.getElementById('records-error').textContent = 'API endpoint not found. Please check the URL.';
+                    stopAutoFetching();
+                    showDebugInfo(url, response.status, 'Endpoint not found');
+                } else {
+                    try {
+                        const errorData = await response.json();
+                        document.getElementById('records-error').textContent = errorData.detail || `Server error: ${response.status}`;
+                        showDebugInfo(url, response.status, JSON.stringify(errorData));
+                    } catch (parseError) {
+                        document.getElementById('records-error').textContent = `Server error: ${response.status} ${response.statusText}`;
+                        showDebugInfo(url, response.status, 'Could not parse error response');
+                    }
+                }
+            } catch (error) {
+                console.error('Fetch records error:', error);
+                document.getElementById('records-error').textContent = 'Network error. Please check the host IP and try again.';
+                stopAutoFetching();
+                showDebugInfo(url, 'Network Error', error.message);
+            }
+        }
+
+        // Login form submission
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            hostIp = cleanHostIp(document.getElementById('host-ip').value);
+
+            try {
+                const response = await fetch(`http://${hostIp}/api/token/`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await response.json();
+                if (response.ok) {
+                    accessToken = data.access;
+                    refreshToken = data.refresh;
+                    
+                    document.getElementById('login-section').style.display = 'none';
+                    document.getElementById('main-content').style.display = 'flex';
+                    document.getElementById('logout').style.display = 'block';
+                    document.getElementById('host-ip-display').textContent = hostIp;
+                    document.getElementById('login-error').textContent = '';
+                    
+                    // Test the connection to the GPS endpoints
+                    await testGPSConnection();
+                } else {
+                    document.getElementById('login-error').textContent = data.detail || 'Invalid username or password';
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                document.getElementById('login-error').textContent = 'Host cannot be contacted. Check the host IP and try again.';
+            }
+        });
+
+        // Test connection to GPS endpoints
+        async function testGPSConnection() {
+            try {
+                // Test GPS submission endpoint
+                const gpsResponse = await fetch(`http://${hostIp}/api/gpslocations/`, {
+                    method: 'OPTIONS', // Use OPTIONS to check if endpoint exists without sending data
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`
+                    }
+                });
+                
+                if (gpsResponse.status !== 200) {
+                    document.getElementById('gps-section').style.display = 'none';
+                    document.getElementById('gps-error').textContent = 'GPS submission endpoint not available';
+                } else {
+                    document.getElementById('gps-section').style.display = 'block';
+                }
+
+                // Test records endpoint
+                const recordsResponse = await fetch(`http://${hostIp}/api/gpslocations/latest/`, {
+                    method: 'OPTIONS',
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`
+                    }
+                });
+                
+                if (recordsResponse.status !== 200) {
+                    document.getElementById('records-section').style.display = 'none';
+                    document.getElementById('records-error').textContent = 'Records endpoint not available';
+                } else {
+                    document.getElementById('records-section').style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Connection test error:', error);
+                document.getElementById('gps-section').style.display = 'none';
+                document.getElementById('records-section').style.display = 'none';
+                document.getElementById('records-error').textContent = 'Could not connect to GPS endpoints';
+            }
+        }
+
+        // Start capturing button
+        document.getElementById('start-capture-btn').addEventListener('click', () => {
+            startCapturing();
+        });
+
+        // Stop capturing button
+        document.getElementById('stop-capture-btn').addEventListener('click', () => {
+            stopCapturing();
+        });
+
+        // Fetch GPS records form submission
+        document.getElementById('records-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            startAutoFetching();
+        });
+
+        // Stop fetching button
+        document.getElementById('stop-fetching-btn').addEventListener('click', () => {
+            stopAutoFetching();
+        });
+
+        // Toggle debug info
+        document.getElementById('show-debug').addEventListener('click', () => {
+            document.getElementById('debug-panel').style.display = 'block';
+        });
+
+        document.getElementById('hide-debug').addEventListener('click', () => {
+            document.getElementById('debug-panel').style.display = 'none';
+        });
+
+        // Logout
+        document.getElementById('logout').addEventListener('click', () => {
+            accessToken = '';
+            refreshToken = '';
+            hostIp = '';
+            stopAutoFetching();
+            stopCapturing();
+            recentSubmissions = [];
+            updateRecentSubmissions();
+            document.getElementById('login-section').style.display = 'block';
+            document.getElementById('main-content').style.display = 'none';
+            document.getElementById('logout').style.display = 'none';
+            document.getElementById('host-ip-display').textContent = '';
+            document.getElementById('login-form').reset();
+            document.getElementById('records-form').reset();
+            document.getElementById('gps-records').innerHTML = '';
+            document.getElementById('login-error').textContent = '';
+            document.getElementById('gps-error').textContent = '';
+            document.getElementById('gps-success').textContent = '';
+            document.getElementById('records-error').textContent = '';
+            document.getElementById('debug-panel').style.display = 'none';
+            document.getElementById('current-location').style.display = 'none';
+            document.getElementById('location-status').style.display = 'none';
+        });
+    </script>
+</body>
+</html>

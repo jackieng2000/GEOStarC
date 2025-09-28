@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPS Group Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        body { font-family: 'Arial', sans-serif; background-color: #f4f4f4; margin: 0; padding: 20px; }
+        form { background-color: #fff; padding: 20px; border-radius: 5px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        input { width: 100%; padding: 10px; margin: 10px 0; box-sizing: border-box; }
+        button { background-color: #4CAF50; color: white; padding: 10px; border: none; cursor: pointer; width: 100%; }
+        button:hover { opacity: 0.8; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; }
+        th { background-color: #f2f2f2; }
+        .hidden { display: none; }
+        .error { color: red; font-size: 0.875rem; }
+    </style>
+</head>
+<body>
+    <div id="login-form">
+        <h2>Login to GPS Tracker</h2>
+        <div class="error" id="login-error"></div>
+        <form>
+            <label for="host-ip">Host IP</label>
+            <input type="text" id="host-ip" placeholder="e.g., http://localhost:8000" required>
+
+            <label for="username">Username</label>
+            <input type="text" id="username" placeholder="Enter username" required>
+
+            <label for="password">Password</label>
+            <input type="password" id="password" placeholder="Enter password" required>
+
+            <button type="button" onclick="handleLogin()">Login</button>
+        </form>
+    </div>
+
+    <div id="group-form" class="hidden">
+        <h2>Request GPS Records for User Group</h2>
+        <div class="error" id="group-error"></div>
+        <form>
+            <label for="userGroup">User Group</label>
+            <input type="text" id="userGroup" placeholder="e.g., group1" required maxLength="15">
+
+            <button type="button" onclick="fetchGroupRecords()">Fetch Records</button>
+        </form>
+        <button type="button" onclick="handleLogout()">Logout</button>
+
+        <h3>GPS Records</h3>
+        <table id="gps-table">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Latitude</th>
+                    <th>Longitude</th>
+                    <th>Timestamp</th>
+                    <th>Altitude</th>
+                    <th>Accuracy</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Records will be inserted here -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        let apiBaseUrl = '';
+        let accessToken = '';
+
+        async function handleLogin() {
+            const hostIp = document.getElementById('host-ip').value.trim();
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const loginError = document.getElementById('login-error');
+
+            if (!hostIp || !username || !password) {
+                loginError.textContent = 'Please fill in all fields.';
+                return;
+            }
+
+            apiBaseUrl = hostIp.endsWith('/') ? hostIp.slice(0, -1) : hostIp;
+
+            try {
+                const response = await axios.post(`${apiBaseUrl}/api/token/`, {
+                    username,
+                    password
+                });
+                accessToken = response.data.access;
+                localStorage.setItem('accessToken', accessToken);
+                localStorage.setItem('apiBaseUrl', apiBaseUrl);
+                document.getElementById('login-form').classList.add('hidden');
+                document.getElementById('group-form').classList.remove('hidden');
+                loginError.textContent = '';
+            } catch (error) {
+                loginError.textContent = error.response?.data?.detail || 'Login failed. Please check your credentials.';
+            }
+        }
+
+        async function fetchGroupRecords() {
+            const userGroup = document.getElementById('userGroup').value.trim();
+            const groupError = document.getElementById('group-error');
+            const tableBody = document.getElementById('gps-table').querySelector('tbody');
+
+            if (!userGroup) {
+                groupError.textContent = 'Please enter a user group.';
+                return;
+            }
+
+            try {
+                const response = await axios.get(`${apiBaseUrl}/api/gpslocations/group/${userGroup}/`, {
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`
+                    }
+                });
+                const records = response.data;
+                tableBody.innerHTML = '';  // Clear previous records
+                if (records.length === 0) {
+                    groupError.textContent = 'No records found for this group.';
+                } else {
+                    groupError.textContent = '';
+                    records.forEach(record => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${record.user ? record.user : 'Anonymous'}</td>
+                            <td>${record.latitude}</td>
+                            <td>${record.longitude}</td>
+                            <td>${record.timestamp}</td>
+                            <td>${record.altitude || 'N/A'}</td>
+                            <td>${record.accuracy || 'N/A'}</td>
+                        `;
+                        tableBody.appendChild(row);
+                    });
+                }
+            } catch (error) {
+                groupError.textContent = error.response?.data?.detail || 'Failed to fetch records.';
+            }
+        }
+
+        function handleLogout() {
+            accessToken = '';
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('apiBaseUrl');
+            document.getElementById('group-form').classList.add('hidden');
+            document.getElementById('login-form').classList.remove('hidden');
+            document.getElementById('login-error').textContent = 'Logged out successfully.';
+        }
+
+        window.onload = () => {
+            accessToken = localStorage.getItem('accessToken') || '';
+            apiBaseUrl = localStorage.getItem('apiBaseUrl') || '';
+            if (accessToken && apiBaseUrl) {
+                document.getElementById('login-form').classList.add('hidden');
+                document.getElementById('group-form').classList.remove('hidden');
+            }
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+[Unit]
+Description=Gunicorn instance for GPSInfo-BackEnd
+After=network.target
+
+[Service]
+User=jackieng
+Group=www-data
+WorkingDirectory=/home/jackieng/GPSInfo-BackEnd
+Environment="PATH=/home/jackieng/.virtualenvs/penv/bin:/usr/local/bin:/usr/bin:/bin"
+ExecStart=/home/jackieng/.virtualenvs/penv/bin/gunicorn \
+    --workers 3 \
+    --bind 127.0.0.1:8000 \
+    --access-logfile - \
+    rbackend.wsgi:application
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

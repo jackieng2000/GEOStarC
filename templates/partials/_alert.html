@@ -1,0 +1,22 @@
+{% if messages %}
+<!------if there is andy messages then loop the message object------------------------>
+{% for message in messages %}
+<div class="container">
+<div id = "message" >
+    <div class="alert alert-{{message.tags}}" alert dismissable text-center role='alert'>
+        
+        <strong>
+            {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %} Error : {% else %}
+            {{message.tags | title }}
+            {% endif %}
+                
+        </strong> {{message}}
+
+        <button type='button' class= "close" data-dismiss='alert'>
+            <span aria-hidden='true'>&times;</span>
+        </button>
+    </div>
+</div>
+</div>
+{% endfor %}
+{% endif %}

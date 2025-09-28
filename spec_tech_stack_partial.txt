@@ -1,0 +1,35 @@
+System Name = GEOStarA 
+Backend - Development Environment 
+---------------------------------
+Ubuntu 24.04
+Python 3.12.4
+html
+css
+Postgres 16
+zsh  
+ohmyzsh
+prowerlevel9
+VScode
+git & github
+Django 4.2, 
+Bootstrap 5.3.3, 
+Font Awesome 6.5.2,
+Project Directory = home/jackieng/GEOStarA
+
+virtualenv
+Name of the virtualenv : genv
+asgiref  3.9.1
+Django   4.2
+pillow   11.3.0
+pip      25.1.1
+psycopg2 2.9.10
+sqlparse 0.5.3
+django-cors-headers
+django-allauth  Social Login: Google, Github
+Django REST Framework (DRF) for RESTful endpoints
+JWT
+
+Guidelines:
+For general js and css to the system, the link to common css and js files will be put in base.html
+For js and css special to a html, it will be stored as "internal" in the html 
+

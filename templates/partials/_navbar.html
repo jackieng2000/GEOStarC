@@ -1,0 +1,278 @@
+{% load static %}
+<style>
+    :root {
+        --primary-color: #2c3e50;
+        --secondary-color: #3498db;
+        --accent-color: #e74c3c;
+        --light-color: #ecf0f1;
+        --dark-color: #2c3e50;
+        --text-color: #333;
+        --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .navbar {
+        box-shadow: var(--shadow);
+        padding: 0.5rem 1rem;
+        transition: all 0.3s ease;
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--dark-color) 100%) !important;
+    }
+    
+    .navbar-brand {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--light-color) !important;
+        display: flex;
+        align-items: center;
+    }
+    
+    .navbar-brand i {
+        margin-right: 10px;
+        color: var(--secondary-color);
+    }
+    
+    .nav-link {
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.85) !important;
+        margin: 0 5px;
+        border-radius: 4px;
+        transition: all 0.3s ease;
+        position: relative;
+        padding: 0.5rem 1rem !important;
+    }
+    
+    .nav-link:hover, .nav-link:focus {
+        color: white !important;
+        background-color: rgba(255, 255, 255, 0.1);
+        transform: translateY(-2px);
+    }
+    
+    .nav-link::after {
+        content: '';
+        position: absolute;
+        width: 0;
+        height: 2px;
+        bottom: 0;
+        left: 50%;
+        background-color: var(--secondary-color);
+        transition: all 0.3s ease;
+    }
+    
+    .nav-link:hover::after {
+        width: 70%;
+        left: 15%;
+    }
+    
+    .nav-link.active {
+        color: white !important;
+        font-weight: 600;
+    }
+    
+    .nav-link.active::after {
+        width: 70%;
+        left: 15%;
+        background-color: var(--accent-color);
+    }
+    
+    .logout-btn {
+        color: rgba(255, 255, 255, 0.85) !important;
+        border: none;
+        background: transparent;
+        font-weight: 500;
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        transition: all 0.3s ease;
+        text-decoration: none !important;
+    }
+    
+    .logout-btn:hover {
+        color: white !important;
+        background-color: rgba(231, 76, 60, 0.2);
+        transform: translateY(-2px);
+    }
+    
+    .navbar-toggler {
+        border: none;
+        color: var(--light-color) !important;
+    }
+    
+    .navbar-toggler:focus {
+        box-shadow: 0 0 0 2px var(--secondary-color);
+    }
+    
+    .welcome-text {
+        color: var(--light-color) !important;
+        font-weight: 500;
+        padding: 0.5rem 1rem !important;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 992px) {
+        .navbar-collapse {
+            background-color: var(--primary-color);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+        
+        .nav-link::after {
+            display: none;
+        }
+        
+        .nav-link {
+            margin: 5px 0;
+        }
+        
+        .logout-btn {
+            display: block;
+            text-align: left;
+            padding: 0.5rem 1rem;
+            margin: 5px 0;
+        }
+    }
+</style>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="{% url 'pages:index' %}">
+            <i class="fas fa-globe-americas"></i>GEOStar
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'pages:index' %}" id="index-link">Index</a>
+                </li>
+                {% if user.is_authenticated %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'pages:dashboard' %}" id="dashboard-link">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'pages:profile' %}" id="profile-link">Profile</a>
+                    </li>
+                {% endif %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'pages:about' %}" id="about-link">About</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'pages:FAQ' %}" id="faq-link">FAQ</a>
+                </li>
+            </ul>
+            <ul class="navbar-nav ms-auto">
+                {% if user.is_authenticated %}
+                    <li class="nav-item d-flex align-items-center">
+                        <span class="welcome-text">Welcome {{ user.username }}</span>
+                    </li>
+                    <li class="nav-item">
+                        <form method="post" action="{% url 'account_logout' %}">
+                            {% csrf_token %}
+                            <button type="submit" class="nav-link btn btn-link logout-btn">Logout</button>
+                        </form>
+                    </li>
+                {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'account_signup' %}" id="register-link">Register</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'account_login' %}" id="login-link">Login</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add scroll effect to navbar
+        const navbar = document.querySelector('.navbar');
+        if (navbar) {
+            window.addEventListener('scroll', function() {
+                if (window.scrollY > 50) {
+                    navbar.style.padding = '0.3rem 1rem';
+                    navbar.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.2)';
+                } else {
+                    navbar.style.padding = '0.5rem 1rem';
+                    navbar.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
+                }
+            });
+        }
+        
+        // Set active link based on current page
+        function setActiveNavLink() {
+            const currentLocation = window.location.href;
+            const navLinks = document.querySelectorAll('.nav-link');
+            
+            navLinks.forEach(link => {
+                // Remove active class from all links
+                link.classList.remove('active');
+                
+                // Add active class to current page link
+                if (link.href === currentLocation) {
+                    link.classList.add('active');
+                }
+            });
+        }
+        
+        // Call the function when the page loads
+        setActiveNavLink();
+        
+        // Close mobile navbar when a link is clicked
+        const navLinks = document.querySelectorAll('.nav-link');
+        const navbarToggler = document.querySelector('.navbar-toggler');
+        const navbarCollapse = document.querySelector('.navbar-collapse');
+        
+        navLinks.forEach(link => {
+            link.addEventListener('click', function() {
+                // If navbar is expanded on mobile, collapse it
+                if (window.innerWidth < 992 && navbarCollapse.classList.contains('show')) {
+                    navbarToggler.click();
+                }
+            });
+        });
+    });
+
+
+        // Function to adjust top padding of the body based on navbar height
+        function adjustBodyPadding() {
+            const navbar = document.querySelector('.navbar');
+            if (navbar) {
+                const navbarHeight = navbar.offsetHeight;
+                document.body.style.paddingTop = navbarHeight + 'px';
+                
+                // Also adjust the main content min-height
+                const main = document.querySelector('main');
+                if (main) {
+                    main.style.minHeight = `calc(100vh - ${navbarHeight}px)`;
+                }
+            }
+        }
+
+        // Run on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            adjustBodyPadding();
+            
+            // Also run on window resize in case navbar height changes
+            window.addEventListener('resize', adjustBodyPadding);
+            
+            // Add scroll effect to navbar
+            const navbar = document.querySelector('.navbar');
+            if (navbar) {
+                window.addEventListener('scroll', function() {
+                    if (window.scrollY > 50) {
+                        navbar.style.padding = '0.3rem 1rem';
+                        navbar.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.2)';
+                    } else {
+                        navbar.style.padding = '0.5rem 1rem';
+                        navbar.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
+                    }
+                    
+                    // Recalculate padding after navbar style changes
+                    setTimeout(adjustBodyPadding, 10);
+                });
+            }
+        });
+
+</script>
