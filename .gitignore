@@ -1,4 +1,4 @@
 .env
 debug.log
-output_file_socialaccount_socialapp.csv
+output_file_*.csv
 __pycache__/
