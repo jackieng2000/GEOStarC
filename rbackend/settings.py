@@ -40,20 +40,27 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.sites',
+    
+    # for REST API
     'rest_framework',
     'rest_framework_simplejwt',
     'corsheaders',
     
+    # for authentication
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
     'allauth.socialaccount.providers.github',
     
+    'channels', # for WebSocket support
+    
+    # apps in this project
     'gpsinfo',
     'accounts',
     'api',
     'pages',
+    'mobile_auth',
 ]
 
 MIDDLEWARE = [
@@ -100,6 +107,16 @@ ACCOUNT_PASSWORD_RESET_CONFIRM = FRONTEND_URL + '/geo_pages1/password-reset-conf
 
 # If you're using a custom adapter for password reset
 #ACCOUNT_ADAPTER = 'yourapp.adapters.CustomAccountAdapter'
+
+ASGI_APPLICATION = 'rbackend.asgi:application'  # Point to your ASGI application
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            'hosts': [('127.0.0.1', 6379)],  # Redis server for Channels
+        },
+    },
+}
 
 
 # CORS Configuration
@@ -304,6 +321,15 @@ LOGGING = {
             'handlers': ['file', 'console'],
             'level': 'DEBUG',
             'propagate': False,
+        },
+    },
+}
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            'hosts': [('127.0.0.1', 6379)],
         },
     },
 }

@@ -26,6 +26,7 @@ from allauth.socialaccount.models import SocialAccount
 from accounts.views import CustomPasswordResetView  # Add this line
 from accounts.views import CustomPasswordResetView, EnsureCSRFTokenView  # Add EnsureCSRFTokenView
 
+from accounts.views import CustomPasswordResetView, EnsureCSRFTokenView, CustomConfirmEmailView, ResendVerificationEmailView
 # Remove this line from urlpatterns:
 # path('api/auth/password/reset/', 'accounts.views.CustomPasswordResetView.as_view()', name='api_password_reset'),
 
@@ -87,31 +88,21 @@ class RegisterView(APIView):
             )
 
         try:
-            # Create user using allauth's adapter to ensure proper signal handling
-            from allauth.account.utils import setup_user_email
-            from allauth.account import app_settings as account_settings
-            
             user = User.objects.create_user(
                 username=username,
                 email=email,
                 password=password
             )
             
-            # Set up email addresses and send confirmation
-            setup_user_email(request, user, [])
+            refresh = RefreshToken.for_user(user)
             
-            # Send email confirmation
-            from allauth.account.utils import send_email_confirmation
-            send_email_confirmation(request, user, email=email)
-            
-            logger.info(f"User registered successfully: {username}. Verification email sent.")
+            logger.info(f"User registered successfully: {username}")
             
             return Response({
-                'success': True,
-                'message': 'Registration successful. Please check your email for verification instructions.',
+                'token': str(refresh.access_token),
+                'refresh': str(refresh),
                 'username': user.username,
-                'email': user.email,
-                'email_verification_required': True
+                'email': user.email
             }, status=status.HTTP_201_CREATED)
 
         except Exception as e:
@@ -120,6 +111,7 @@ class RegisterView(APIView):
                 {'non_field_errors': ['Registration failed. Please try again.']},
                 status=status.HTTP_400_BAD_REQUEST
             )
+
 @method_decorator(csrf_exempt, name='dispatch')
 class GoogleLoginView(APIView):
     permission_classes = [AllowAny]
