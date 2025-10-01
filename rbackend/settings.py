@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     # apps in this project
     'gpsinfo',
     'accounts',
+    'events',
     'api',
     'pages',
     'mobile_auth',
@@ -80,9 +81,11 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
+    # Remove DEFAULT_PERMISSION_CLASSES or set to AllowAny
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
+        'rest_framework.permissions.AllowAny',
     ],
+        
     # This ensures unauthenticated responses are handled properly
     'EXCEPTION_HANDLER': 'rest_framework.views.exception_handler',
     'UNAUTHENTICATED_USER': None,

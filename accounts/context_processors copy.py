@@ -1,5 +1,4 @@
 from allauth.socialaccount.models import SocialAccount
-from django.apps import apps
 
 def is_google_user(user):
     """
@@ -30,15 +29,29 @@ def get_user_registration_method(user):
     social_account = SocialAccount.objects.filter(user=user).first()
     return social_account.provider if social_account else 'email'
 
+# def user_registration_info(request):
+#     """
+#     Add user registration information to template context
+#     """
+#     context = {}
+    
+#     if request.user.is_authenticated:
+#         context['is_google_user'] = is_google_user(request.user)
+#         context['social_provider'] = get_social_provider(request.user)
+#         context['registration_method'] = get_user_registration_method(request.user)
+    
+#     return context
+
+from django.apps import apps
+
 def user_registration_info(request):
     """
     Add user registration information to template context
-    Safely handles cases where request.user might be None (like in API views)
+    Safely handles cases where SocialAccount model might not be available
     """
     context = {}
     
-    # Safely check if user is authenticated
-    if hasattr(request, 'user') and request.user is not None and request.user.is_authenticated:
+    if request.user.is_authenticated:
         try:
             # Check if SocialAccount model is available
             if apps.is_installed('allauth.socialaccount'):
@@ -67,10 +80,5 @@ def user_registration_info(request):
             context['is_google_user'] = False
             context['social_provider'] = None
             context['registration_method'] = 'email'
-    else:
-        # User is not authenticated or request.user is None
-        context['is_google_user'] = False
-        context['social_provider'] = None
-        context['registration_method'] = None
     
     return context

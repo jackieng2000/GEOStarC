@@ -149,12 +149,16 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'pages:dashboard' %}" id="dashboard-link">Dashboard</a>
                     </li>
+                    <!-- Events Direct Link -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'events:event_maintenance' %}" id="events-link">Events</a>
+                    </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'pages:profile' %}" id="profile-link">Profile</a>
                     </li>
                 {% endif %}
                 <li class="nav-item">
-                    <a class="nav-link" href="{% url 'pages:about' %}" id="about-link">About</a>
+                    <a class="nav-link" href="{% url 'pages:api_testing' %}" id="api_testing-link">API Testing</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="{% url 'pages:FAQ' %}" id="faq-link">FAQ</a>
@@ -205,11 +209,13 @@
             const currentLocation = window.location.href;
             const navLinks = document.querySelectorAll('.nav-link');
             
+            // Remove active class from all links
             navLinks.forEach(link => {
-                // Remove active class from all links
                 link.classList.remove('active');
-                
-                // Add active class to current page link
+            });
+            
+            // Add active class to current page link
+            navLinks.forEach(link => {
                 if (link.href === currentLocation) {
                     link.classList.add('active');
                 }
@@ -232,8 +238,6 @@
                 }
             });
         });
-    });
-
 
         // Function to adjust top padding of the body based on navbar height
         function adjustBodyPadding() {
@@ -251,28 +255,16 @@
         }
 
         // Run on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            adjustBodyPadding();
-            
-            // Also run on window resize in case navbar height changes
-            window.addEventListener('resize', adjustBodyPadding);
-            
-            // Add scroll effect to navbar
-            const navbar = document.querySelector('.navbar');
-            if (navbar) {
-                window.addEventListener('scroll', function() {
-                    if (window.scrollY > 50) {
-                        navbar.style.padding = '0.3rem 1rem';
-                        navbar.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.2)';
-                    } else {
-                        navbar.style.padding = '0.5rem 1rem';
-                        navbar.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
-                    }
-                    
-                    // Recalculate padding after navbar style changes
-                    setTimeout(adjustBodyPadding, 10);
-                });
-            }
-        });
-
+        adjustBodyPadding();
+        
+        // Also run on window resize in case navbar height changes
+        window.addEventListener('resize', adjustBodyPadding);
+        
+        // Recalculate padding after navbar style changes
+        if (navbar) {
+            window.addEventListener('scroll', function() {
+                setTimeout(adjustBodyPadding, 10);
+            });
+        }
+    });
 </script>

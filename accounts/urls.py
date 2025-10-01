@@ -25,6 +25,5 @@ urlpatterns = [
     path('api/github-login/', social_views.github_login, name='github_login'),
     path('api/github-auth-url/', social_views.github_auth_url, name='github_auth_url'),
     
-    # Include allauth URLs - IMPORTANT!
-  
+
 ]

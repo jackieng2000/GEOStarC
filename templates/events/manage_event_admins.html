@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Event Admins - {{ event.EventName }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>
+        <i class="fas fa-users-cog"></i> 
+        Event Administrators: {{ event.EventName }}
+    </h2>
+    <a href="{% url 'events:event_maintenance_with_id' event.EventId %}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Back to Event
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-user-plus"></i> Add Administrator
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    {% for field in form %}
+                    <div class="form-group">
+                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ field.errors.0 }}
+                            </div>
+                        {% endif %}
+                        {% if field.help_text %}
+                            <small class="form-text text-muted">{{ field.help_text }}</small>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                    
+                    <button type="submit" class="btn btn-primary btn-block">
+                        <i class="fas fa-plus"></i> Add Administrator
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-list"></i> Current Administrators
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if event_admins %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Username</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Added</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Main Admin -->
+                            <tr class="table-info">
+                                <td>
+                                    <strong>{{ event.AdminUser.username }}</strong>
+                                    <span class="badge badge-primary ml-1">Main Admin</span>
+                                </td>
+                                <td>{{ event.AdminUser.email }}</td>
+                                <td>-</td>
+                                <td>{{ event.CreateTimeStamp|date:"M d, Y" }}</td>
+                                <td>-</td>
+                            </tr>
+                            
+                            <!-- Additional Admins -->
+                            {% for admin in event_admins %}
+                            <tr>
+                                <td>{{ admin.UserId.username }}</td>
+                                <td>{{ admin.UserId.email }}</td>
+                                <td>
+                                    {% if admin.Role %}
+                                        <span class="badge badge-secondary">{{ admin.Role }}</span>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ admin.AssignedTimestamp|date:"M d, Y" }}</td>
+                                <td>
+                                    <a href="{% url 'events:remove_event_admin' event.EventId admin.id %}" 
+                                       class="btn btn-sm btn-outline-danger"
+                                       onclick="return confirm('Are you sure you want to remove this administrator?')">
+                                        <i class="fas fa-trash"></i> Remove
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">No additional administrators added yet.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

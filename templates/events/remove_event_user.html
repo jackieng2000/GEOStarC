@@ -1,0 +1,61 @@
+{% extends 'events/base.html' %}
+
+{% block title %}Remove Participant - {{ event.EventName }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-user-times"></i> Remove Participant
+                </h5>
+            </div>
+            <div class="card-body text-center">
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
+                    <h5>Are you sure you want to remove this participant?</h5>
+                </div>
+                
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h6>Participant Details:</h6>
+                        <p><strong>Username:</strong> {{ event_user.UserId.username }}</p>
+                        <p><strong>Email:</strong> {{ event_user.UserId.email }}</p>
+                        <p><strong>Event:</strong> {{ event.EventName }}</p>
+                        <p><strong>Status:</strong> 
+                            {% if event_user.Completed %}
+                                <span class="badge badge-success">Completed</span>
+                            {% elif event_user.StartTimestamp %}
+                                <span class="badge badge-warning">In Progress</span>
+                            {% else %}
+                                <span class="badge badge-info">Registered</span>
+                            {% endif %}
+                        </p>
+                        {% if event_user.NetTime %}
+                            <p><strong>Net Time:</strong> {{ event_user.NetTime }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i>
+                    This action will remove all participation data for this user.
+                </div>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="action-buttons">
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash"></i> Yes, Remove Participant
+                        </button>
+                        <a href="{% url 'events:manage_event_users' event.EventId %}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

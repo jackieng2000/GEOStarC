@@ -32,10 +32,10 @@ def profile(request):
     context = {}
     return render(request, 'pages/index.html')
 
-def about(request):
+def api_testing(request):
     
     context = {}
-    return render(request, 'pages/index.html')
+    return render(request, 'pages/mobile_auth_testing_all_api.html')
 
 def faq(request):
     

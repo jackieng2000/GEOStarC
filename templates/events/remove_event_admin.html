@@ -1,0 +1,51 @@
+{% extends 'events/base.html' %}
+
+{% block title %}Remove Event Admin - {{ event.EventName }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-trash"></i> Remove Administrator
+                </h5>
+            </div>
+            <div class="card-body text-center">
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
+                    <h5>Are you sure you want to remove this administrator?</h5>
+                </div>
+                
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h6>Administrator Details:</h6>
+                        <p><strong>Username:</strong> {{ event_admin.UserId.username }}</p>
+                        <p><strong>Email:</strong> {{ event_admin.UserId.email }}</p>
+                        <p><strong>Role:</strong> 
+                            {% if event_admin.Role %}
+                                {{ event_admin.Role }}
+                            {% else %}
+                                <span class="text-muted">Not specified</span>
+                            {% endif %}
+                        </p>
+                        <p><strong>Event:</strong> {{ event.EventName }}</p>
+                    </div>
+                </div>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="action-buttons">
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash"></i> Yes, Remove Administrator
+                        </button>
+                        <a href="{% url 'events:manage_event_admins' event.EventId %}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

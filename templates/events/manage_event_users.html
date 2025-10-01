@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+
+{% block title %}GEOStar-Event Participants - {{ event.EventName }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>
+        <i class="fas fa-users"></i> 
+        Event Participants: {{ event.EventName }}
+    </h2>
+    <a href="{% url 'events:event_maintenance_with_id' event.EventId %}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Back to Event
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-user-plus"></i> Add Participant
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    {% for field in form %}
+                    <div class="form-group">
+                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ field.errors.0 }}
+                            </div>
+                        {% endif %}
+                        {% if field.help_text %}
+                            <small class="form-text text-muted">{{ field.help_text }}</small>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                    
+                    <button type="submit" class="btn btn-info btn-block">
+                        <i class="fas fa-plus"></i> Add Participant
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card mt-4">
+            <div class="card-header bg-secondary text-white">
+                <h6 class="mb-0">
+                    <i class="fas fa-chart-bar"></i> Event Statistics
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <h4>{{ event_users.count }}</h4>
+                        <small class="text-muted">Total Participants</small>
+                    </div>
+                    <div class="col-6">
+                        <h4>{{ event_users|length }}</h4>
+                        <small class="text-muted">Enrolled</small>
+                    </div>
+                </div>
+                <hr>
+                <div class="row text-center">
+                    <div class="col-4">
+                        <h5 class="text-success">{{ event_users|length }}</h5>
+                        <small class="text-muted">Registered</small>
+                    </div>
+                    <div class="col-4">
+                        <h5 class="text-warning">{{ event_users|length }}</h5>
+                        <small class="text-muted">In Progress</small>
+                    </div>
+                    <div class="col-4">
+                        <h5 class="text-primary">{{ event_users|length }}</h5>
+                        <small class="text-muted">Completed</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-list"></i> Event Participants
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if event_users %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Username</th>
+                                <th>Email</th>
+                                <th>Status</th>
+                                <th>Start Time</th>
+                                <th>End Time</th>
+                                <th>Net Time</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for event_user in event_users %}
+                            <tr>
+                                <td>
+                                    <strong>{{ event_user.UserId.username }}</strong>
+                                    {% if event_user.Completed %}
+                                        <span class="badge badge-success ml-1">Completed</span>
+                                    {% elif event_user.is_active_participant %}
+                                        <span class="badge badge-warning ml-1">In Progress</span>
+                                    {% else %}
+                                        <span class="badge badge-info ml-1">Registered</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ event_user.UserId.email }}</td>
+                                <td>
+                                    {% if event_user.Completed %}
+                                        <span class="badge badge-success">Completed</span>
+                                    {% elif event_user.StartTimestamp %}
+                                        <span class="badge badge-warning">In Progress</span>
+                                    {% else %}
+                                        <span class="badge badge-info">Registered</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if event_user.StartTimestamp %}
+                                        {{ event_user.StartTimestamp|date:"M d, Y H:i" }}
+                                    {% else %}
+                                        <span class="text-muted">Not started</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if event_user.EndTimestamp %}
+                                        {{ event_user.EndTimestamp|date:"M d, Y H:i" }}
+                                    {% else %}
+                                        <span class="text-muted">Not finished</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if event_user.NetTime %}
+                                        {{ event_user.NetTime }}
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <a href="{% url 'events:update_event_user' event.EventId event_user.id %}" 
+                                           class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </a>
+                                        <a href="{% url 'events:remove_event_user' event.EventId event_user.id %}" 
+                                           class="btn btn-sm btn-outline-danger">
+                                            <i class="fas fa-trash"></i> Remove
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">No participants enrolled in this event yet.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

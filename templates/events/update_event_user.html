@@ -1,0 +1,97 @@
+{% extends 'events/base.html' %}
+
+{% block title %}Update Participant - {{ event.EventName }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-user-edit"></i> 
+                    Update Participant: {{ event_user.UserId.username }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i>
+                    Updating participation details for <strong>{{ event_user.UserId.username }}</strong> 
+                    in event <strong>{{ event.EventName }}</strong>
+                </div>
+
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        {% for field in form %}
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                {{ field }}
+                                {% if field.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ field.errors.0 }}
+                                    </div>
+                                {% endif %}
+                                {% if field.help_text %}
+                                    <small class="form-text text-muted">{{ field.help_text }}</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="form-group">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="completed" 
+                                   name="Completed" {% if event_user.Completed %}checked{% endif %}>
+                            <label class="form-check-label" for="completed">
+                                Mark as completed
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Update Participant
+                        </button>
+                        <a href="{% url 'events:manage_event_users' event.EventId %}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Auto-calculate net time when both start and end times are provided
+    document.addEventListener('DOMContentLoaded', function() {
+        const startTimeField = document.getElementById('id_StartTimestamp');
+        const endTimeField = document.getElementById('id_EndTimestamp');
+        
+        function calculateNetTime() {
+            if (startTimeField.value && endTimeField.value) {
+                const startTime = new Date(startTimeField.value);
+                const endTime = new Date(endTimeField.value);
+                
+                if (startTime && endTime && startTime < endTime) {
+                    const diffMs = endTime - startTime;
+                    const diffHrs = Math.floor(diffMs / 3600000);
+                    const diffMins = Math.floor((diffMs % 3600000) / 60000);
+                    const diffSecs = Math.floor((diffMs % 60000) / 1000);
+                    
+                    // You can display this or set it in a hidden field
+                    console.log(`Net time: ${diffHrs}:${diffMins}:${diffSecs}`);
+                }
+            }
+        }
+        
+        startTimeField.addEventListener('change', calculateNetTime);
+        endTimeField.addEventListener('change', calculateNetTime);
+    });
+</script>
+{% endblock %}

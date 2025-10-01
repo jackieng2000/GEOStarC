@@ -16,8 +16,10 @@ urlpatterns = [
     path('gpstest/', GpsTestView.as_view(), name='gpstest'),
     path('admin/', admin.site.urls),
     path('', lambda request: redirect('pages:index'), name='home'),
-    path('accounts/', include('allauth.urls')),  # Allauth for web
     
+    path('accounts/', include('allauth.urls')),  # Allauth for web
+    path('events/', include('events.urls', namespace='events')),
+        
     # REST API
     path('api/', include(router.urls)),
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),

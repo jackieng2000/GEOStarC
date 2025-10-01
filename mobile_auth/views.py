@@ -5,6 +5,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import AllowAny
+from rest_framework.permissions import IsAuthenticated  # Add this import
 from django.contrib.auth import authenticate, get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.conf import settings
@@ -81,8 +82,64 @@ class MobileRegisterView(APIView):
             logger.exception(f"Mobile registration error: {str(e)}")
             return Response({'error': 'Registration failed'}, status=status.HTTP_400_BAD_REQUEST)
 
-# Inclu
-# de MobileGoogleLoginView and MobileGitHubLoginView from previous example...
+# mobile_auth/views.py
+from rest_framework import status
+from rest_framework.decorators import api_view
+from rest_framework.generics import GenericAPIView
+from rest_framework.response import Response
+from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_decode
+from django.contrib.auth import get_user_model
+from .serializers import (
+    PasswordResetSerializer,
+    PasswordResetConfirmSerializer,
+    PasswordChangeSerializer
+)
+
+User = get_user_model()
+
+# mobile_auth/views.py
+from rest_framework.permissions import AllowAny, IsAuthenticated
+
+class MobilePasswordResetView(GenericAPIView):
+    serializer_class = PasswordResetSerializer
+    permission_classes = [AllowAny]  # Make sure this is set
+    
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response({
+            "detail": "Password reset e-mail has been sent."
+        }, status=status.HTTP_200_OK)
+        
+class MobilePasswordResetConfirmView(GenericAPIView):
+    serializer_class = PasswordResetConfirmSerializer
+    
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response({
+            "detail": "Password has been reset successfully."
+        }, status=status.HTTP_200_OK)
+
+class MobilePasswordChangeView(GenericAPIView):
+    serializer_class = PasswordChangeSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        # Update session auth hash to keep user logged in
+        update_session_auth_hash(request, user)
+        return Response({
+            "detail": "Password changed successfully."
+        }, status=status.HTTP_200_OK)
+
+# Include MobileGoogleLoginView and MobileGitHubLoginView from previous example...
 
 class MobileGoogleLoginView(APIView):
     """

@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Mobile Auth APIs</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .host-config { margin-bottom: 20px; padding: 15px; background: #f0f8ff; border-radius: 5px; }
+        .endpoint { margin-bottom: 30px; padding: 20px; border: 1px solid #ddd; border-radius: 5px; }
+        input, button { padding: 8px 12px; margin: 5px; border: 1px solid #ccc; border-radius: 4px; }
+        input[type="text"], input[type="password"], input[type="email"] { width: 200px; }
+        button { background: #007bff; color: white; border: none; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .result { margin-top: 10px; padding: 10px; background: #f5f5f5; border-radius: 4px; white-space: pre-wrap; font-family: monospace; }
+        .success { color: green; }
+        .error { color: red; }
+        h3 { margin-top: 0; color: #333; }
+        .request-details { display: none; margin-top: 10px; padding: 10px; background: #f8f9fa; border-radius: 4px; }
+        .details-button { background: #6c757d; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <h1>GEOStar APIs - Mobile Authentication</h1>
+
+    <!-- Host Configuration -->
+    <div class="host-config">
+        <h3>API Host Configuration</h3>
+        <label for="api-host">API Base URL:</label>
+        <input type="text" id="api-host" value="http://localhost:8000" style="width: 300px;">
+        <small>Change this if your Django server is running on a different host/port</small>
+    </div>
+
+    <!-- Login Endpoint -->
+    <div class="endpoint">
+        <h3>1. Mobile Login</h3>
+        <div>
+            <input type="text" id="login-username" placeholder="Username" value="admin">
+            <input type="password" id="login-password" placeholder="Password" value="1234">
+            <button onclick="testLogin()">Test Login</button>
+        </div>
+        <div><strong>Endpoint:</strong> <span id="login-endpoint">http://localhost:8000/api/auth/login/</span></div>
+        <div><strong>JSON:</strong> <code>{"username": "admin", "password": "1234"}</code></div>
+        
+        <!-- Request Details Display -->
+        <div style="margin-top: 10px;">
+            <button onclick="toggleRequestDetails('login')" class="details-button">Show Request Details</button>
+            <div id="login-request-details" class="request-details">
+                <strong>Headers:</strong>
+                <pre id="login-headers">Content-Type: application/json</pre>
+                <strong>Body:</strong>
+                <pre id="login-body">{
+  "username": "admin",
+  "password": "1234"
+}</pre>
+            </div>
+        </div>
+        
+        <div id="login-result" class="result"></div>
+    </div>
+
+    <!-- Register Endpoint -->
+    <div class="endpoint">
+        <h3>2. Mobile Register</h3>
+        <div>
+            <input type="text" id="reg-username" placeholder="Username" value="newuser">
+            <input type="email" id="reg-email" placeholder="Email" value="newuser@example.com">
+            <input type="password" id="reg-password" placeholder="Password" value="1234">
+            <input type="password" id="reg-password2" placeholder="Confirm Password" value="1234">
+            <button onclick="testRegister()">Test Register</button>
+        </div>
+        <div><strong>Endpoint:</strong> <span id="register-endpoint">http://localhost:8000/api/auth/register/</span></div>
+        <div><strong>JSON:</strong> <code>{"username": "newuser", "email": "newuser@example.com", "password": "1234", "password2": "1234"}</code></div>
+        
+        <!-- Request Details Display -->
+        <div style="margin-top: 10px;">
+            <button onclick="toggleRequestDetails('register')" class="details-button">Show Request Details</button>
+            <div id="register-request-details" class="request-details">
+                <strong>Headers:</strong>
+                <pre id="register-headers">Content-Type: application/json</pre>
+                <strong>Body:</strong>
+                <pre id="register-body">{
+  "username": "newuser",
+  "email": "newuser@example.com",
+  "password": "1234",
+  "password2": "1234"
+}</pre>
+            </div>
+        </div>
+        
+        <div id="register-result" class="result"></div>
+    </div>
+
+    <!-- Google Login Endpoint -->
+    <div class="endpoint">
+        <h3>3. Google Login</h3>
+        <div>
+            <input type="text" id="google-token" placeholder="Google Access Token" style="width: 400px;">
+            <button onclick="testGoogleLogin()">Test Google Login</button>
+        </div>
+        <div><strong>Endpoint:</strong> <span id="google-endpoint">http://localhost:8000/api/auth/google/</span></div>
+        <div><strong>JSON:</strong> <code>{"access_token": "your_google_access_token_here"}</code></div>
+        
+        <!-- Request Details Display -->
+        <div style="margin-top: 10px;">
+            <button onclick="toggleRequestDetails('google')" class="details-button">Show Request Details</button>
+            <div id="google-request-details" class="request-details">
+                <strong>Headers:</strong>
+                <pre id="google-headers">Content-Type: application/json</pre>
+                <strong>Body:</strong>
+                <pre id="google-body">{
+  "access_token": "your_google_access_token_here"
+}</pre>
+            </div>
+        </div>
+        
+        <div id="google-result" class="result"></div>
+    </div>
+
+    <!-- GitHub Login Endpoint -->
+    <div class="endpoint">
+        <h3>4. GitHub Login</h3>
+        <div>
+            <input type="text" id="github-token" placeholder="GitHub Access Token" style="width: 400px;">
+            <button onclick="testGitHubLogin()">Test GitHub Login</button>
+        </div>
+        <div><strong>Endpoint:</strong> <span id="github-endpoint">http://localhost:8000/api/auth/github/</span></div>
+        <div><strong>JSON:</strong> <code>{"access_token": "your_github_access_token_here"}</code></div>
+        
+        <!-- Request Details Display -->
+        <div style="margin-top: 10px;">
+            <button onclick="toggleRequestDetails('github')" class="details-button">Show Request Details</button>
+            <div id="github-request-details" class="request-details">
+                <strong>Headers:</strong>
+                <pre id="github-headers">Content-Type: application/json</pre>
+                <strong>Body:</strong>
+                <pre id="github-body">{
+  "access_token": "your_github_access_token_here"
+}</pre>
+            </div>
+        </div>
+        
+        <div id="github-result" class="result"></div>
+    </div>
+
+    <!-- Password Reset Endpoints -->
+    <div class="endpoint">
+        <h3>5. Password Reset Request</h3>
+        <div>
+            <input type="email" id="reset-email" placeholder="Email" value="user@example.com" style="width: 250px;">
+            <button onclick="testPasswordReset()">Send Reset Email</button>
+        </div>
+        <div><strong>Endpoint:</strong> <span id="reset-endpoint">http://localhost:8000/api/auth/password/reset/</span></div>
+        <div><strong>JSON:</strong> <code>{"email": "user@example.com"}</code></div>
+        
+        <!-- Request Details Display -->
+        <div style="margin-top: 10px;">
+            <button onclick="toggleRequestDetails('reset')" class="details-button">Show Request Details</button>
+            <div id="reset-request-details" class="request-details">
+                <strong>Headers:</strong>
+                <pre id="reset-headers">Content-Type: application/json</pre>
+                <strong>Body:</strong>
+                <pre id="reset-body">{
+  "email": "user@example.com"
+}</pre>
+            </div>
+        </div>
+        
+        <div id="reset-result" class="result"></div>
+    </div>
+
+    <div class="endpoint">
+        <h3>6. Password Reset Confirm</h3>
+        <div>
+            <input type="text" id="reset-uid" placeholder="UID" value="MQ" style="width: 100px;">
+            <input type="text" id="reset-token" placeholder="Token" value="abc123" style="width: 150px;">
+            <input type="password" id="reset-new-password" placeholder="New Password" value="newpass123">
+            <input type="password" id="reset-new-password2" placeholder="Confirm Password" value="newpass123">
+            <button onclick="testPasswordResetConfirm()">Confirm Reset</button>
+        </div>
+        <div><strong>Endpoint:</strong> <span id="reset-confirm-endpoint">http://localhost:8000/api/auth/password/reset/confirm/</span></div>
+        <div><strong>JSON:</strong> <code>{"uid": "MQ", "token": "abc123", "new_password": "newpass123", "new_password2": "newpass123"}</code></div>
+        
+        <!-- Request Details Display -->
+        <div style="margin-top: 10px;">
+            <button onclick="toggleRequestDetails('reset-confirm')" class="details-button">Show Request Details</button>
+            <div id="reset-confirm-request-details" class="request-details">
+                <strong>Headers:</strong>
+                <pre id="reset-confirm-headers">Content-Type: application/json</pre>
+                <strong>Body:</strong>
+                <pre id="reset-confirm-body">{
+  "uid": "MQ",
+  "token": "abc123",
+  "new_password": "newpass123",
+  "new_password2": "newpass123"
+}</pre>
+            </div>
+        </div>
+        
+        <div id="reset-confirm-result" class="result"></div>
+    </div>
+
+    <!-- Password Change (Requires Auth) -->
+    <div class="endpoint">
+        <h3>7. Password Change (Requires Auth)</h3>
+        
+        <!-- Token Status Display -->
+        <div style="margin-bottom: 15px; padding: 10px; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px;">
+            <strong>Authentication Status:</strong> 
+            <span id="token-status" style="color: #dc3545;">No token - Please login first</span>
+            <br>
+            <small>Current Token: <span id="current-token-preview">None</span></small>
+        </div>
+        
+        <div>
+            <input type="password" id="change-old-password" placeholder="Old Password" value="oldpass123">
+            <input type="password" id="change-new-password" placeholder="New Password" value="newpass123">
+            <input type="password" id="change-new-password2" placeholder="Confirm New Password" value="newpass123">
+            <button onclick="testPasswordChange()">Change Password</button>
+        </div>
+        
+        <div><strong>Endpoint:</strong> <span id="change-endpoint">http://localhost:8000/api/auth/password/change/</span></div>
+        <div><strong>JSON (3 fields):</strong> <code>{"old_password": "oldpass123", "new_password": "newpass123", "new_password2": "newpass123"}</code></div>
+        
+        <!-- Request Details Display -->
+        <div style="margin-top: 10px;">
+            <button onclick="toggleRequestDetails('change')" class="details-button">Show Request Details</button>
+            <div id="change-request-details" class="request-details">
+                <strong>Headers:</strong>
+                <pre id="change-headers">Authorization: Bearer [token_will_appear_here]
+Content-Type: application/json</pre>
+                <strong>Body:</strong>
+                <pre id="change-body">{
+  "old_password": "oldpass123",
+  "new_password": "newpass123", 
+  "new_password2": "newpass123"
+}</pre>
+            </div>
+        </div>
+        
+        <div id="change-result" class="result"></div>
+    </div>
+
+    <!-- Test All Button -->
+    <div style="margin-top: 30px; text-align: center;">
+        <button onclick="testAllEndpoints()" style="padding: 12px 24px; background: #28a745; font-size: 16px;">
+            Test All Endpoints (Login Only)
+        </button>
+        <button onclick="clearAllResults()" style="padding: 12px 24px; background: #6c757d; font-size: 16px; margin-left: 10px;">
+            Clear All Results
+        </button>
+        <button onclick="clearToken()" style="padding: 12px 24px; background: #dc3545; font-size: 16px; margin-left: 10px;">
+            Clear Token
+        </button>
+    </div>
+
+    <script>
+    // Global variables
+    let accessToken = '';
+
+    // Update endpoint URLs when host changes
+    document.getElementById('api-host').addEventListener('input', updateEndpoints);
+    
+    function updateEndpoints() {
+        const host = document.getElementById('api-host').value;
+        document.getElementById('login-endpoint').textContent = `${host}/api/auth/login/`;
+        document.getElementById('register-endpoint').textContent = `${host}/api/auth/register/`;
+        document.getElementById('google-endpoint').textContent = `${host}/api/auth/google/`;
+        document.getElementById('github-endpoint').textContent = `${host}/api/auth/github/`;
+        document.getElementById('reset-endpoint').textContent = `${host}/api/auth/password/reset/`;
+        document.getElementById('reset-confirm-endpoint').textContent = `${host}/api/auth/password/reset/confirm/`;
+        document.getElementById('change-endpoint').textContent = `${host}/api/auth/password/change/`;
+    }
+
+    // Initialize endpoints on load
+    updateEndpoints();
+
+    function getBaseUrl() {
+        return document.getElementById('api-host').value;
+    }
+
+    // Update token status display
+    function updateTokenStatus() {
+        const tokenStatus = document.getElementById('token-status');
+        const tokenPreview = document.getElementById('current-token-preview');
+        
+        if (accessToken) {
+            tokenStatus.textContent = 'Token available ✓';
+            tokenStatus.style.color = '#28a745';
+            tokenPreview.textContent = accessToken.substring(0, 30) + '...';
+        } else {
+            tokenStatus.textContent = 'No token - Please login first';
+            tokenStatus.style.color = '#dc3545';
+            tokenPreview.textContent = 'None';
+        }
+    }
+
+    // Toggle request details for all endpoints
+    function toggleRequestDetails(type) {
+        const detailsDiv = document.getElementById(`${type}-request-details`);
+        const button = detailsDiv.previousElementSibling;
+        
+        if (detailsDiv.style.display === 'none') {
+            detailsDiv.style.display = 'block';
+            button.textContent = 'Hide Request Details';
+            
+            // Update the headers and body with current values
+            updateRequestDetails(type);
+        } else {
+            detailsDiv.style.display = 'none';
+            button.textContent = 'Show Request Details';
+        }
+    }
+
+    // Update request details with current values
+    function updateRequestDetails(type) {
+        const headersDiv = document.getElementById(`${type}-headers`);
+        const bodyDiv = document.getElementById(`${type}-body`);
+        
+        let headers = 'Content-Type: application/json';
+        let body = {};
+        
+        switch(type) {
+            case 'login':
+                body = {
+                    username: document.getElementById('login-username').value,
+                    password: document.getElementById('login-password').value
+                };
+                break;
+            case 'register':
+                body = {
+                    username: document.getElementById('reg-username').value,
+                    email: document.getElementById('reg-email').value,
+                    password: document.getElementById('reg-password').value,
+                    password2: document.getElementById('reg-password2').value
+                };
+                break;
+            case 'google':
+                body = {
+                    access_token: document.getElementById('google-token').value || 'your_google_access_token_here'
+                };
+                break;
+            case 'github':
+                body = {
+                    access_token: document.getElementById('github-token').value || 'your_github_access_token_here'
+                };
+                break;
+            case 'reset':
+                body = {
+                    email: document.getElementById('reset-email').value
+                };
+                break;
+            case 'reset-confirm':
+                body = {
+                    uid: document.getElementById('reset-uid').value,
+                    token: document.getElementById('reset-token').value,
+                    new_password: document.getElementById('reset-new-password').value,
+                    new_password2: document.getElementById('reset-new-password2').value
+                };
+                break;
+            case 'change':
+                headers = accessToken ? 
+                    `Authorization: Bearer ${accessToken}\nContent-Type: application/json` :
+                    'Authorization: Bearer [no_token_available]\nContent-Type: application/json';
+                body = {
+                    old_password: document.getElementById('change-old-password').value,
+                    new_password: document.getElementById('change-new-password').value,
+                    new_password2: document.getElementById('change-new-password2').value
+                };
+                break;
+        }
+        
+        headersDiv.textContent = headers;
+        bodyDiv.textContent = JSON.stringify(body, null, 2);
+    }
+
+    // Login function
+    async function testLogin() {
+        const data = {
+            username: document.getElementById('login-username').value,
+            password: document.getElementById('login-password').value
+        };
+        
+        const baseUrl = getBaseUrl();
+        const url = baseUrl + '/api/auth/login/';
+        
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            });
+            
+            const result = await response.json();
+            const resultDiv = document.getElementById('login-result');
+            
+            if (response.ok) {
+                accessToken = result.access;
+                updateTokenStatus(); // Update the token status display
+                updateRequestDetails('change'); // Update password change request details
+                
+                resultDiv.innerHTML = `<strong>✅ Login Successful!</strong><br>
+                                      Token stored for authenticated requests.<br>
+                                      <small>Access Token: ${result.access.substring(0, 50)}...</small>`;
+                resultDiv.className = 'result success';
+            } else {
+                resultDiv.innerHTML = `<strong>❌ Error:</strong> ${JSON.stringify(result, null, 2)}`;
+                resultDiv.className = 'result error';
+            }
+        } catch (error) {
+            document.getElementById('login-result').innerHTML = `<strong>❌ Request failed:</strong> ${error}`;
+            document.getElementById('login-result').className = 'result error';
+        }
+    }
+
+    // Register function
+    async function testRegister() {
+        const data = {
+            username: document.getElementById('reg-username').value,
+            email: document.getElementById('reg-email').value,
+            password: document.getElementById('reg-password').value,
+            password2: document.getElementById('reg-password2').value
+        };
+        
+        await makeRequest('/api/auth/register/', data, 'register-result');
+    }
+
+    // Password Reset function
+    async function testPasswordReset() {
+        const data = {
+            email: document.getElementById('reset-email').value
+        };
+        
+        await makeRequest('/api/auth/password/reset/', data, 'reset-result');
+    }
+
+    // Password Reset Confirm function
+    async function testPasswordResetConfirm() {
+        const data = {
+            uid: document.getElementById('reset-uid').value,
+            token: document.getElementById('reset-token').value,
+            new_password: document.getElementById('reset-new-password').value,
+            new_password2: document.getElementById('reset-new-password2').value
+        };
+        
+        await makeRequest('/api/auth/password/reset/confirm/', data, 'reset-confirm-result');
+    }
+
+    // Password Change function
+    async function testPasswordChange() {
+        if (!accessToken) {
+            document.getElementById('change-result').innerHTML = 
+                '<strong>❌ Error:</strong> Please login first to get an access token';
+            document.getElementById('change-result').className = 'result error';
+            return;
+        }
+
+        const data = {
+            old_password: document.getElementById('change-old-password').value,
+            new_password: document.getElementById('change-new-password').value,
+            new_password2: document.getElementById('change-new-password2').value
+        };
+        
+        await makeAuthenticatedRequest('/api/auth/password/change/', data, 'change-result');
+    }
+
+    // Google Login function
+    async function testGoogleLogin() {
+        const data = {
+            access_token: document.getElementById('google-token').value
+        };
+        
+        await makeRequest('/api/auth/google/', data, 'google-result');
+    }
+
+    // GitHub Login function
+    async function testGitHubLogin() {
+        const data = {
+            access_token: document.getElementById('github-token').value
+        };
+        
+        await makeRequest('/api/auth/github/', data, 'github-result');
+    }
+
+    // Test All Endpoints function
+    async function testAllEndpoints() {
+        // Test login endpoint first as it's the most common use case
+        await testLogin();
+    }
+
+    // Generic request function for unauthenticated endpoints
+    async function makeRequest(endpoint, data, resultElementId) {
+        const baseUrl = getBaseUrl();
+        const url = baseUrl + endpoint;
+        
+        // Clear previous result
+        const resultDiv = document.getElementById(resultElementId);
+        resultDiv.innerHTML = 'Sending request...';
+        resultDiv.className = 'result';
+        
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify(data, null, 2)
+            });
+            
+            let result;
+            const contentType = response.headers.get('content-type');
+            
+            // Handle different response types
+            if (contentType && contentType.includes('application/json')) {
+                result = await response.json();
+            } else {
+                result = await response.text();
+            }
+            
+            if (response.ok) {
+                resultDiv.innerHTML = `<strong>✅ Success (HTTP ${response.status})</strong>\n\n${typeof result === 'string' ? result : JSON.stringify(result, null, 2)}`;
+                resultDiv.className = 'result success';
+            } else {
+                resultDiv.innerHTML = `<strong>❌ Error (HTTP ${response.status})</strong>\n\n${typeof result === 'string' ? result : JSON.stringify(result, null, 2)}`;
+                resultDiv.className = 'result error';
+            }
+        } catch (error) {
+            resultDiv.innerHTML = `<strong>❌ Request Failed</strong>\n\n${error.message}`;
+            resultDiv.className = 'result error';
+        }
+    }
+
+    // Authenticated request function for endpoints requiring JWT token
+    async function makeAuthenticatedRequest(endpoint, data, resultElementId) {
+        const baseUrl = getBaseUrl();
+        const url = baseUrl + endpoint;
+        
+        const resultDiv = document.getElementById(resultElementId);
+        resultDiv.innerHTML = 'Sending authenticated request with token...';
+        resultDiv.className = 'result';
+        
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken}`,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify(data, null, 2)
+            });
+            
+            let result;
+            const contentType = response.headers.get('content-type');
+            
+            if (contentType && contentType.includes('application/json')) {
+                result = await response.json();
+            } else {
+                result = await response.text();
+            }
+            
+            if (response.ok) {
+                resultDiv.innerHTML = `<strong>✅ Success (HTTP ${response.status})</strong>\n\n${typeof result === 'string' ? result : JSON.stringify(result, null, 2)}`;
+                resultDiv.className = 'result success';
+            } else {
+                resultDiv.innerHTML = `<strong>❌ Error (HTTP ${response.status})</strong>\n\n${typeof result === 'string' ? result : JSON.stringify(result, null, 2)}`;
+                resultDiv.className = 'result error';
+                
+                // If token is invalid, clear it
+                if (response.status === 401) {
+                    accessToken = '';
+                    updateTokenStatus();
+                    updateRequestDetails('change');
+                }
+            }
+        } catch (error) {
+            resultDiv.innerHTML = `<strong>❌ Request Failed</strong>\n\n${error.message}`;
+            resultDiv.className = 'result error';
+        }
+    }
+
+    // Clear all results
+    function clearAllResults() {
+        const resultDivs = document.querySelectorAll('.result');
+        resultDivs.forEach(div => {
+            div.innerHTML = '';
+            div.className = 'result';
+        });
+    }
+
+    // Clear token (logout)
+    function clearToken() {
+        accessToken = '';
+        updateTokenStatus();
+        updateRequestDetails('change');
+        document.getElementById('login-result').innerHTML = '<strong>Token cleared. Please login again.</strong>';
+        document.getElementById('login-result').className = 'result';
+    }
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        updateEndpoints();
+        updateTokenStatus();
+        
+        // Add some sample tokens for testing
+        document.getElementById('google-token').placeholder = 'Enter Google OAuth token (starts with ya29.)';
+        document.getElementById('github-token').placeholder = 'Enter GitHub OAuth token (starts with gho_)';
+
+        // Add helpful examples in the tokens when clicked
+        document.getElementById('google-token').addEventListener('focus', function() {
+            if (!this.value) {
+                this.placeholder = 'Example: ya29.a0AfB_byzRk... (get from Google OAuth flow)';
+            }
+        });
+
+        document.getElementById('github-token').addEventListener('focus', function() {
+            if (!this.value) {
+                this.placeholder = 'Example: gho_16C7e42F292c... (get from GitHub OAuth flow)';
+            }
+        });
+
+        // Add enter key support for login
+        document.getElementById('login-password').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                testLogin();
+            }
+        });
+
+        // Initialize all request details with current values
+        ['login', 'register', 'google', 'github', 'reset', 'reset-confirm', 'change'].forEach(type => {
+            updateRequestDetails(type);
+        });
+    });
+    </script> 
+</body>
+</html>
