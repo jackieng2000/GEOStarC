@@ -17,14 +17,22 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', lambda request: redirect('pages:index'), name='home'),
     
-    path('accounts/', include('allauth.urls')),  # Allauth for web
-    path('events/', include('events.urls', namespace='events')),
-        
-    # REST API
-    path('api/', include(router.urls)),
-    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    # Web Interface (Django Templates + Allauth)
+    path('accounts/', include('allauth.urls')),  # Web auth only    
     
     # Mobile Auth Endpoints (New dedicated app)
-    path('api/auth/', include('mobile_auth.urls')),  # Clean separation!
+    path('api/auth/', include('mobile_auth.urls')),  #Primary API auth
+    
+    
+    # Django Template routes - Events management
+    path('events/', include('events.urls', namespace='events')),
+    
+    # API routes (consistent with existing pattern)
+    path('api/events/', include('events.api.urls', namespace='events-api')),
+        
+    # REST API - For future integrations with React.
+    # path('api/', include(router.urls)),
+    # path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    # path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    
 ]

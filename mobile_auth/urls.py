@@ -10,8 +10,13 @@ app_name = 'mobile_auth'
 urlpatterns = [
     path('login/', views.MobileLoginView.as_view(), name='mobile_login'),
     path('register/', views.MobileRegisterView.as_view(), name='mobile_register'),
+    
+    # Social auth endpoints
     path('google/', views.MobileGoogleLoginView.as_view(), name='mobile_google_login'),
     path('github/', views.MobileGitHubLoginView.as_view(), name='mobile_github_login'),
+    
+    # Token management
+    path('token/refresh/', views.MobileTokenRefreshView.as_view(), name='mobile_token_refresh'),
     
     # Password reset endpoints
     path('password/reset/', views.MobilePasswordResetView.as_view(), name='mobile_password_reset'),

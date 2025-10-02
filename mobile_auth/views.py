@@ -139,6 +139,24 @@ class MobilePasswordChangeView(GenericAPIView):
             "detail": "Password changed successfully."
         }, status=status.HTTP_200_OK)
 
+
+# Add to mobile_auth/views.py
+from rest_framework_simplejwt.views import TokenRefreshView
+
+class MobileTokenRefreshView(TokenRefreshView):
+    """
+    JWT token refresh endpoint for mobile apps
+    """
+    permission_classes = [AllowAny]
+    
+    def post(self, request, *args, **kwargs):
+        response = super().post(request, *args, **kwargs)
+        
+        # Log token refresh attempts (optional)
+        logger.info("Mobile token refresh attempted")
+        
+        return response
+
 # Include MobileGoogleLoginView and MobileGitHubLoginView from previous example...
 
 class MobileGoogleLoginView(APIView):

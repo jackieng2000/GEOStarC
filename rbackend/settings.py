@@ -59,7 +59,7 @@ INSTALLED_APPS = [
     'gpsinfo',
     'accounts',
     'events',
-    'api',
+    # 'api',
     'pages',
     'mobile_auth',
 ]

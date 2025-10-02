@@ -16,7 +16,6 @@
         h3 { margin-top: 0; color: #333; }
         .request-details { display: none; margin-top: 10px; padding: 10px; background: #f8f9fa; border-radius: 4px; }
         .details-button { background: #6c757d; font-size: 12px; }
-        .token-status { margin-bottom: 15px; padding: 10px; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px; }
     </style>
 </head>
 <body>
@@ -28,16 +27,6 @@
         <label for="api-host">API Base URL:</label>
         <input type="text" id="api-host" value="http://localhost:8000" style="width: 300px;">
         <small>Change this if your Django server is running on a different host/port</small>
-    </div>
-
-    <!-- Token Status Display -->
-    <div class="token-status">
-        <strong>Authentication Status:</strong> 
-        <span id="token-status" style="color: #dc3545;">No token - Please login first</span>
-        <br>
-        <small>Current Access Token: <span id="current-token-preview">None</span></small>
-        <br>
-        <small>Current Refresh Token: <span id="current-refresh-token-preview">None</span></small>
     </div>
 
     <!-- Login Endpoint -->
@@ -68,36 +57,9 @@
         <div id="login-result" class="result"></div>
     </div>
 
-    <!-- Token Refresh Endpoint -->
-    <div class="endpoint">
-        <h3>2. Token Refresh</h3>
-        <div>
-            <input type="text" id="refresh-token" placeholder="Refresh Token" style="width: 400px;">
-            <button onclick="testTokenRefresh()">Test Token Refresh</button>
-            <button onclick="useCurrentRefreshToken()">Use Current Refresh Token</button>
-        </div>
-        <div><strong>Endpoint:</strong> <span id="refresh-endpoint">http://localhost:8000/api/auth/token/refresh/</span></div>
-        <div><strong>JSON:</strong> <code>{"refresh": "your_refresh_token_here"}</code></div>
-        
-        <!-- Request Details Display -->
-        <div style="margin-top: 10px;">
-            <button onclick="toggleRequestDetails('refresh')" class="details-button">Show Request Details</button>
-            <div id="refresh-request-details" class="request-details">
-                <strong>Headers:</strong>
-                <pre id="refresh-headers">Content-Type: application/json</pre>
-                <strong>Body:</strong>
-                <pre id="refresh-body">{
-  "refresh": "your_refresh_token_here"
-}</pre>
-            </div>
-        </div>
-        
-        <div id="refresh-result" class="result"></div>
-    </div>
-
     <!-- Register Endpoint -->
     <div class="endpoint">
-        <h3>3. Mobile Register</h3>
+        <h3>2. Mobile Register</h3>
         <div>
             <input type="text" id="reg-username" placeholder="Username" value="newuser">
             <input type="email" id="reg-email" placeholder="Email" value="newuser@example.com">
@@ -129,7 +91,7 @@
 
     <!-- Google Login Endpoint -->
     <div class="endpoint">
-        <h3>4. Google Login</h3>
+        <h3>3. Google Login</h3>
         <div>
             <input type="text" id="google-token" placeholder="Google Access Token" style="width: 400px;">
             <button onclick="testGoogleLogin()">Test Google Login</button>
@@ -155,7 +117,7 @@
 
     <!-- GitHub Login Endpoint -->
     <div class="endpoint">
-        <h3>5. GitHub Login</h3>
+        <h3>4. GitHub Login</h3>
         <div>
             <input type="text" id="github-token" placeholder="GitHub Access Token" style="width: 400px;">
             <button onclick="testGitHubLogin()">Test GitHub Login</button>
@@ -181,7 +143,7 @@
 
     <!-- Password Reset Endpoints -->
     <div class="endpoint">
-        <h3>6. Password Reset Request</h3>
+        <h3>5. Password Reset Request</h3>
         <div>
             <input type="email" id="reset-email" placeholder="Email" value="user@example.com" style="width: 250px;">
             <button onclick="testPasswordReset()">Send Reset Email</button>
@@ -206,7 +168,7 @@
     </div>
 
     <div class="endpoint">
-        <h3>7. Password Reset Confirm</h3>
+        <h3>6. Password Reset Confirm</h3>
         <div>
             <input type="text" id="reset-uid" placeholder="UID" value="MQ" style="width: 100px;">
             <input type="text" id="reset-token" placeholder="Token" value="abc123" style="width: 150px;">
@@ -238,7 +200,16 @@
 
     <!-- Password Change (Requires Auth) -->
     <div class="endpoint">
-        <h3>8. Password Change (Requires Auth)</h3>
+        <h3>7. Password Change (Requires Auth)</h3>
+        
+        <!-- Token Status Display -->
+        <div style="margin-bottom: 15px; padding: 10px; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px;">
+            <strong>Authentication Status:</strong> 
+            <span id="token-status" style="color: #dc3545;">No token - Please login first</span>
+            <br>
+            <small>Current Token: <span id="current-token-preview">None</span></small>
+        </div>
+        
         <div>
             <input type="password" id="change-old-password" placeholder="Old Password" value="oldpass123">
             <input type="password" id="change-new-password" placeholder="New Password" value="newpass123">
@@ -276,15 +247,14 @@ Content-Type: application/json</pre>
         <button onclick="clearAllResults()" style="padding: 12px 24px; background: #6c757d; font-size: 16px; margin-left: 10px;">
             Clear All Results
         </button>
-        <button onclick="clearTokens()" style="padding: 12px 24px; background: #dc3545; font-size: 16px; margin-left: 10px;">
-            Clear Tokens
+        <button onclick="clearToken()" style="padding: 12px 24px; background: #dc3545; font-size: 16px; margin-left: 10px;">
+            Clear Token
         </button>
     </div>
 
     <script>
     // Global variables
     let accessToken = '';
-    let refreshToken = '';
 
     // Update endpoint URLs when host changes
     document.getElementById('api-host').addEventListener('input', updateEndpoints);
@@ -292,7 +262,6 @@ Content-Type: application/json</pre>
     function updateEndpoints() {
         const host = document.getElementById('api-host').value;
         document.getElementById('login-endpoint').textContent = `${host}/api/auth/login/`;
-        document.getElementById('refresh-endpoint').textContent = `${host}/api/auth/token/refresh/`;
         document.getElementById('register-endpoint').textContent = `${host}/api/auth/register/`;
         document.getElementById('google-endpoint').textContent = `${host}/api/auth/google/`;
         document.getElementById('github-endpoint').textContent = `${host}/api/auth/github/`;
@@ -312,23 +281,15 @@ Content-Type: application/json</pre>
     function updateTokenStatus() {
         const tokenStatus = document.getElementById('token-status');
         const tokenPreview = document.getElementById('current-token-preview');
-        const refreshTokenPreview = document.getElementById('current-refresh-token-preview');
         
-        if (accessToken && refreshToken) {
-            tokenStatus.textContent = 'Both tokens available ✓';
+        if (accessToken) {
+            tokenStatus.textContent = 'Token available ✓';
             tokenStatus.style.color = '#28a745';
             tokenPreview.textContent = accessToken.substring(0, 30) + '...';
-            refreshTokenPreview.textContent = refreshToken.substring(0, 30) + '...';
-        } else if (accessToken) {
-            tokenStatus.textContent = 'Access token only (no refresh)';
-            tokenStatus.style.color = '#ffc107';
-            tokenPreview.textContent = accessToken.substring(0, 30) + '...';
-            refreshTokenPreview.textContent = 'None';
         } else {
-            tokenStatus.textContent = 'No tokens - Please login first';
+            tokenStatus.textContent = 'No token - Please login first';
             tokenStatus.style.color = '#dc3545';
             tokenPreview.textContent = 'None';
-            refreshTokenPreview.textContent = 'None';
         }
     }
 
@@ -362,11 +323,6 @@ Content-Type: application/json</pre>
                 body = {
                     username: document.getElementById('login-username').value,
                     password: document.getElementById('login-password').value
-                };
-                break;
-            case 'refresh':
-                body = {
-                    refresh: document.getElementById('refresh-token').value || refreshToken || 'your_refresh_token_here'
                 };
                 break;
             case 'register':
@@ -440,15 +396,12 @@ Content-Type: application/json</pre>
             
             if (response.ok) {
                 accessToken = result.access;
-                refreshToken = result.refresh;
                 updateTokenStatus(); // Update the token status display
                 updateRequestDetails('change'); // Update password change request details
-                updateRequestDetails('refresh'); // Update refresh token request details
                 
                 resultDiv.innerHTML = `<strong>✅ Login Successful!</strong><br>
-                                      Both tokens stored for authenticated requests.<br>
-                                      <small>Access Token: ${result.access.substring(0, 50)}...</small><br>
-                                      <small>Refresh Token: ${result.refresh.substring(0, 50)}...</small>`;
+                                      Token stored for authenticated requests.<br>
+                                      <small>Access Token: ${result.access.substring(0, 50)}...</small>`;
                 resultDiv.className = 'result success';
             } else {
                 resultDiv.innerHTML = `<strong>❌ Error:</strong> ${JSON.stringify(result, null, 2)}`;
@@ -457,57 +410,6 @@ Content-Type: application/json</pre>
         } catch (error) {
             document.getElementById('login-result').innerHTML = `<strong>❌ Request failed:</strong> ${error}`;
             document.getElementById('login-result').className = 'result error';
-        }
-    }
-
-    // Token Refresh function
-    async function testTokenRefresh() {
-        let refreshTokenValue = document.getElementById('refresh-token').value;
-        
-        // If no token in input field, use the stored refresh token
-        if (!refreshTokenValue && refreshToken) {
-            refreshTokenValue = refreshToken;
-            document.getElementById('refresh-token').value = refreshTokenValue;
-        }
-        
-        if (!refreshTokenValue) {
-            document.getElementById('refresh-result').innerHTML = 
-                '<strong>❌ Error:</strong> No refresh token provided. Please login first or enter a refresh token.';
-            document.getElementById('refresh-result').className = 'result error';
-            return;
-        }
-
-        const data = {
-            refresh: refreshTokenValue
-        };
-        
-        await makeRequest('/api/auth/token/refresh/', data, 'refresh-result', function(result) {
-            // If refresh successful, update the access token
-            if (result.access) {
-                accessToken = result.access;
-                updateTokenStatus();
-                updateRequestDetails('change');
-                
-                // Update the result display with success message
-                const resultDiv = document.getElementById('refresh-result');
-                resultDiv.innerHTML = `<strong>✅ Token Refresh Successful!</strong><br>
-                                      New access token stored.<br>
-                                      <small>New Access Token: ${result.access.substring(0, 50)}...</small>`;
-                resultDiv.className = 'result success';
-            }
-        });
-    }
-
-    // Use current refresh token in the input field
-    function useCurrentRefreshToken() {
-        if (refreshToken) {
-            document.getElementById('refresh-token').value = refreshToken;
-            updateRequestDetails('refresh');
-            document.getElementById('refresh-result').innerHTML = '<strong>✓ Current refresh token loaded into field</strong>';
-            document.getElementById('refresh-result').className = 'result success';
-        } else {
-            document.getElementById('refresh-result').innerHTML = '<strong>❌ No refresh token available. Please login first.</strong>';
-            document.getElementById('refresh-result').className = 'result error';
         }
     }
 
@@ -587,7 +489,7 @@ Content-Type: application/json</pre>
     }
 
     // Generic request function for unauthenticated endpoints
-    async function makeRequest(endpoint, data, resultElementId, successCallback = null) {
+    async function makeRequest(endpoint, data, resultElementId) {
         const baseUrl = getBaseUrl();
         const url = baseUrl + endpoint;
         
@@ -617,12 +519,8 @@ Content-Type: application/json</pre>
             }
             
             if (response.ok) {
-                if (successCallback) {
-                    successCallback(result);
-                } else {
-                    resultDiv.innerHTML = `<strong>✅ Success (HTTP ${response.status})</strong>\n\n${typeof result === 'string' ? result : JSON.stringify(result, null, 2)}`;
-                    resultDiv.className = 'result success';
-                }
+                resultDiv.innerHTML = `<strong>✅ Success (HTTP ${response.status})</strong>\n\n${typeof result === 'string' ? result : JSON.stringify(result, null, 2)}`;
+                resultDiv.className = 'result success';
             } else {
                 resultDiv.innerHTML = `<strong>❌ Error (HTTP ${response.status})</strong>\n\n${typeof result === 'string' ? result : JSON.stringify(result, null, 2)}`;
                 resultDiv.className = 'result error';
@@ -691,15 +589,12 @@ Content-Type: application/json</pre>
         });
     }
 
-    // Clear tokens (logout)
-    function clearTokens() {
+    // Clear token (logout)
+    function clearToken() {
         accessToken = '';
-        refreshToken = '';
-        document.getElementById('refresh-token').value = '';
         updateTokenStatus();
         updateRequestDetails('change');
-        updateRequestDetails('refresh');
-        document.getElementById('login-result').innerHTML = '<strong>Tokens cleared. Please login again.</strong>';
+        document.getElementById('login-result').innerHTML = '<strong>Token cleared. Please login again.</strong>';
         document.getElementById('login-result').className = 'result';
     }
 
@@ -711,7 +606,6 @@ Content-Type: application/json</pre>
         // Add some sample tokens for testing
         document.getElementById('google-token').placeholder = 'Enter Google OAuth token (starts with ya29.)';
         document.getElementById('github-token').placeholder = 'Enter GitHub OAuth token (starts with gho_)';
-        document.getElementById('refresh-token').placeholder = 'Enter refresh token or login to get one';
 
         // Add helpful examples in the tokens when clicked
         document.getElementById('google-token').addEventListener('focus', function() {
@@ -726,12 +620,6 @@ Content-Type: application/json</pre>
             }
         });
 
-        document.getElementById('refresh-token').addEventListener('focus', function() {
-            if (!this.value) {
-                this.placeholder = 'Example: eyJ0eXAiOiJKV1QiLCJhbGci... (get from login response)';
-            }
-        });
-
         // Add enter key support for login
         document.getElementById('login-password').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
@@ -740,7 +628,7 @@ Content-Type: application/json</pre>
         });
 
         // Initialize all request details with current values
-        ['login', 'refresh', 'register', 'google', 'github', 'reset', 'reset-confirm', 'change'].forEach(type => {
+        ['login', 'register', 'google', 'github', 'reset', 'reset-confirm', 'change'].forEach(type => {
             updateRequestDetails(type);
         });
     });
